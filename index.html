@@ -17,6 +17,16 @@
         }
         /* ตกแต่งส่วนที่เป็น Progress ให้ดูสมูท */
         .progress-bar { transition: height 1s cubic-bezier(0.4, 0, 0.2, 1); }
+        
+        /* Animation สำหรับ Active Task */
+        .active-task-pulse {
+            animation: borderPulse 2s infinite;
+        }
+        @keyframes borderPulse {
+            0% { border-color: #3b82f6; box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+            70% { border-color: #60a5fa; box-shadow: 0 0 0 6px rgba(59, 130, 246, 0); }
+            100% { border-color: #3b82f6; box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 pb-20">
@@ -32,7 +42,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-black tracking-tight leading-none">Hybrid Planner</h1>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Lazy Morning Edition</p>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Version 2.0 (Holiday Edition)</p>
                 </div>
             </div>
             
@@ -57,7 +67,6 @@
     <script>
         /**
          * 1. ข้อมูลตั้งต้น (INITIAL DATA)
-         * รวมตารางกิจกรรมที่ละเอียดที่สุดของคุณจาก Revision 1
          */
         const DEFAULT_SCHEDULE = [
             {
@@ -150,33 +159,34 @@
             }
         ];
 
-        const THAI_HOLIDAYS = {
+        // วันหยุดเริ่มต้น (Fallback)
+        const DEFAULT_HOLIDAYS = {
             "2024-12-05": "วันพ่อแห่งชาติ", "2024-12-10": "วันรัฐธรรมนูญ", "2024-12-31": "วันสิ้นปี",
             "2025-01-01": "วันขึ้นปีใหม่", "2025-04-13": "วันสงกรานต์", "2025-04-14": "วันสงกรานต์", "2025-04-15": "วันสงกรานต์"
         };
 
         /**
          * 2. สถานะเริ่มต้น (STATE)
-         * ดึงข้อมูลจาก LocalStorage ถ้ามี
          */
         let scheduleData = JSON.parse(localStorage.getItem('hybrid_schedule_v1')) || DEFAULT_SCHEDULE;
         let startDateStr = localStorage.getItem('hybrid_start_date') || '2024-11-25';
+        let holidaysData = JSON.parse(localStorage.getItem('hybrid_holidays_cache')) || DEFAULT_HOLIDAYS;
+        let holidayApiStatus = 'Idle'; // Idle, Loading, Success, Error
+        
         let currentView = 'dashboard';
-        let previewOffset = 0; // สำหรับเลื่อนดูวันถัดไป/ก่อนหน้า
-        let calendarBaseDate = new Date(); // สำหรับแสดงปฏิทินในเดือนต่างๆ
+        let previewOffset = 0; 
+        let calendarBaseDate = new Date(); 
 
         /**
          * 3. ฟังก์ชันคำนวณรอบวัน (CORE CALCULATIONS)
          */
 
-        // หาจำนวนวันทั้งหมดใน 1 รอบ (Cycle Length)
         function getCycleLength() {
             let max = 0;
             scheduleData.forEach(p => p.days.forEach(d => { if(d > max) max = d; }));
             return max || 1;
         }
 
-        // หาว่า "วันที่กำหนด" ตรงกับวันไหนในรอบ Cycle (Day 1 - Day X)
         function getCycleDay(dateObj) {
             const start = new Date(startDateStr);
             start.setHours(0,0,0,0);
@@ -187,11 +197,9 @@
             const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
             const cycleLen = getCycleLength();
             
-            // คำนวณแบบ Modulo เพื่อให้วนรอบได้ไม่มีที่สิ้นสุด
             return ((diffDays % cycleLen + cycleLen) % cycleLen) + 1;
         }
 
-        // ดึงกิจกรรม Icon แบบ SVG
         function getIcon(name) {
             const icons = {
                 Zap: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>',
@@ -206,6 +214,44 @@
                 Sun: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>'
             };
             return icons[name] || icons.Sun;
+        }
+
+        // --- HOLIDAYS API FETCHING ---
+        async function fetchThaiHolidays() {
+            holidayApiStatus = 'Loading';
+            renderEditor(document.getElementById('app-content')); // Update UI to show loading
+            
+            const currentYear = new Date().getFullYear();
+            const years = [currentYear - 1, currentYear, currentYear + 1]; // Past, Current, Future
+            let newHolidays = {...holidaysData};
+            let successCount = 0;
+
+            try {
+                for (let year of years) {
+                    // Using Nager.Date API
+                    const response = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${year}/TH`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        data.forEach(h => {
+                            newHolidays[h.date] = h.localName;
+                        });
+                        successCount++;
+                    }
+                }
+                
+                if (successCount > 0) {
+                    holidaysData = newHolidays;
+                    localStorage.setItem('hybrid_holidays_cache', JSON.stringify(holidaysData));
+                    holidayApiStatus = 'Success';
+                } else {
+                    holidayApiStatus = 'Error';
+                }
+            } catch (error) {
+                console.error("Holiday Fetch Error:", error);
+                holidayApiStatus = 'Error';
+            }
+            renderEditor(document.getElementById('app-content')); // Refresh UI
+            if(currentView === 'calendar') renderCalendar(document.getElementById('app-content')); // Refresh Calendar if active
         }
 
         /**
@@ -225,14 +271,14 @@
 
         function render() {
             const container = document.getElementById('app-content');
-            container.innerHTML = '';
+            container.innerHTML = ''; // Clear content
 
             if (currentView === 'dashboard') renderDashboard(container);
             else if (currentView === 'calendar') renderCalendar(container);
             else if (currentView === 'editor') renderEditor(container);
         }
 
-        // หน้า DASHBOARD
+        // --- DASHBOARD ---
         function renderDashboard(container) {
             const now = new Date();
             const targetDate = new Date();
@@ -244,22 +290,23 @@
             const targetLabel = targetDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
 
             let currentTask = null;
-            let nextTask = null;
             if (phase) {
                 const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
                 const sorted = [...phase.routine].sort((a,b) => a.start.localeCompare(b.start));
-                for(let i=0; i < sorted.length; i++) {
-                    const item = sorted[i];
-                    // ตรวจสอบช่วงเวลา (รองรับกะข้ามคืน)
-                    const isActive = (timeStr >= item.start && (timeStr < item.end || item.end < item.start)) || 
-                                     (item.end < item.start && timeStr < item.end);
-                    if (isActive) {
-                        currentTask = item;
-                        nextTask = sorted[i+1] || sorted[0];
-                        break;
+                
+                // Find active task (only if isToday)
+                if (isToday) {
+                    for(let i=0; i < sorted.length; i++) {
+                        const item = sorted[i];
+                        const isActive = (timeStr >= item.start && (timeStr < item.end || item.end < item.start)) || 
+                                       (item.end < item.start && timeStr < item.end);
+                        if (isActive) {
+                            currentTask = item;
+                            break;
+                        }
                     }
+                    if (!currentTask && sorted.length > 0) currentTask = sorted[0]; // Fallback
                 }
-                if (!currentTask) currentTask = sorted[0];
             }
 
             container.innerHTML = `
@@ -281,9 +328,9 @@
                                     <h2 class="text-slate-400 font-bold text-[10px] uppercase mb-1">${isToday ? 'กิจกรรมปัจจุบัน:' : 'ส่องตารางล่วงหน้า:'}</h2>
                                     <div class="text-2xl md:text-3xl font-black text-slate-800 flex items-center justify-center md:justify-start gap-4">
                                         <div class="p-3 bg-blue-50 text-blue-500 rounded-2xl">
-                                            ${getIcon(currentTask?.icon || 'Sun')}
+                                            ${getIcon(currentTask?.icon || (phase?.routine[0]?.icon) || 'Sun')}
                                         </div>
-                                        <span class="leading-tight">${currentTask?.task || 'พักผ่อนอิสระ'}</span>
+                                        <span class="leading-tight">${currentTask?.task || (isToday ? 'พักผ่อนอิสระ' : 'ดูรายการด้านล่าง')}</span>
                                     </div>
                                 </div>
                                 <div class="px-4 py-1.5 rounded-full inline-block text-[10px] font-black uppercase ${phase?.color || 'bg-slate-100'}">
@@ -321,37 +368,28 @@
                             </div>
                         </div>
                         <div class="divide-y divide-slate-50">
-                            ${phase?.routine.map(item => `
-                                <div class="flex items-center gap-5 p-5 transition-all hover:bg-slate-50/50">
-                                    <div class="text-[11px] font-black text-slate-400 w-24 shrink-0">${item.start} - ${item.end}</div>
-                                    <div class="p-2.5 bg-slate-100 rounded-xl text-slate-400 shrink-0">${getIcon(item.icon)}</div>
-                                    <div class="flex-1 text-sm font-bold text-slate-700 leading-relaxed">${item.task}</div>
+                            ${phase?.routine.map(item => {
+                                // Logic Highlighting Task
+                                const isActiveTask = isToday && currentTask && item.start === currentTask.start;
+                                const activeClass = isActiveTask ? 'bg-blue-50 border-l-4 border-blue-500 active-task-pulse shadow-sm scale-[1.01]' : 'hover:bg-slate-50/50 border-l-4 border-transparent';
+                                
+                                return `
+                                <div class="flex items-center gap-5 p-5 transition-all ${activeClass}">
+                                    <div class="text-[11px] font-black w-24 shrink-0 ${isActiveTask ? 'text-blue-600' : 'text-slate-400'}">${item.start} - ${item.end}</div>
+                                    <div class="p-2.5 bg-slate-100 rounded-xl text-slate-400 shrink-0 ${isActiveTask ? 'bg-blue-100 text-blue-500' : ''}">${getIcon(item.icon)}</div>
+                                    <div class="flex-1 text-sm font-bold leading-relaxed ${isActiveTask ? 'text-blue-800' : 'text-slate-700'}">${item.task}</div>
+                                    ${isActiveTask ? '<span class="text-[9px] font-black text-white bg-blue-500 px-2 py-0.5 rounded-md uppercase tracking-wide animate-pulse">Now</span>' : ''}
                                 </div>
-                            `).join('') || '<div class="p-10 text-center text-slate-400 italic">ไม่มีข้อมูลกิจกรรม</div>'}
+                                `;
+                            }).join('') || '<div class="p-10 text-center text-slate-400 italic">ไม่มีข้อมูลกิจกรรม</div>'}
                         </div>
-                    </div>
-
-                    <!-- Quick Setting -->
-                    <div class="bg-white p-6 rounded-3xl border border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
-                        <div class="flex items-center gap-4">
-                            <div class="p-3 bg-blue-50 text-blue-500 rounded-2xl">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                            </div>
-                            <div>
-                                <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Cycle Reference Date</div>
-                                <input type="date" value="${startDateStr}" onchange="updateStartDate(this.value)" class="font-bold text-slate-700 outline-none border-b border-transparent hover:border-blue-200 focus:border-blue-500 transition-all">
-                            </div>
-                        </div>
-                        <p class="text-[10px] text-slate-400 font-bold max-w-[200px] md:text-right leading-relaxed italic">
-                            *ระบุวันที่คุณเริ่มกะเช้าวันแรก (Day 1) ระบบจะจำค่าไว้ให้ตลอดไป
-                        </p>
                     </div>
                 </div>
             `;
             startClock();
         }
 
-        // หน้า CALENDAR
+        // --- CALENDAR ---
         function renderCalendar(container) {
             const year = calendarBaseDate.getFullYear();
             const month = calendarBaseDate.getMonth();
@@ -360,37 +398,70 @@
             const monthLabel = calendarBaseDate.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' });
 
             let gridHTML = '';
+            // Spacer for empty days before the 1st
             for (let i = 0; i < firstDay; i++) gridHTML += '<div class="aspect-square opacity-10"></div>';
             
+            // List for Legend
+            let currentMonthHolidays = [];
+
             for (let d = 1; d <= totalDays; d++) {
-                const date = new Date(year, month, d);
-                const isoKey = date.toISOString().split('T')[0];
-                const cDay = getCycleDay(date);
+                // Correct Date Construction to avoid timezone shift
+                // Use a string format YYYY-MM-DD
+                const dStr = String(d).padStart(2, '0');
+                const mStr = String(month + 1).padStart(2, '0');
+                const isoKey = `${year}-${mStr}-${dStr}`;
+                
+                // Create Date Object for Cycle Calculation
+                const dateObj = new Date(year, month, d);
+                
+                const cDay = getCycleDay(dateObj);
                 const phase = scheduleData.find(p => p.days.includes(cDay));
-                const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-                const holiday = THAI_HOLIDAYS[isoKey];
-                const isPerfectOff = phase?.type?.includes('off') && (isWeekend || holiday);
+                const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
+                const holidayName = holidaysData[isoKey];
+                if (holidayName) currentMonthHolidays.push({ date: d, name: holidayName });
+
+                // Check Types
+                const isPerfectOff = phase?.type?.includes('off') && (isWeekend || holidayName);
+                const isGhost = phase?.type?.includes('transition');
                 const isToday = new Date().toISOString().split('T')[0] === isoKey;
+
+                // Emoji Logic (Priority Chain)
+                let emoji = '';
+                if (isPerfectOff && holidayName) emoji = '💛'; // Gold Heart (Super Off)
+                else if (isPerfectOff) emoji = '❤️';
+                else if (isGhost && holidayName) emoji = '🌟'; // Gold Star/Ghost (Holiday Ghost)
+                else if (isGhost) emoji = '👻';
+                else if (holidayName) emoji = '✨'; // Just Holiday
 
                 gridHTML += `
                     <div onclick="jumpToDate('${isoKey}')" 
                          class="aspect-square relative flex flex-col items-center justify-center rounded-2xl border-2 cursor-pointer transition-all hover:scale-105 active:scale-95
                         ${phase?.color || 'bg-white border-slate-50'} 
                         ${isToday ? 'border-blue-500 ring-4 ring-blue-50 z-10' : 'border-transparent'}
-                        ${isPerfectOff ? 'ring-2 ring-rose-300 shadow-lg' : ''}">
+                        ${isPerfectOff ? 'ring-2 ring-rose-200 shadow-md' : ''}">
+                        
                         <span class="text-sm font-black ${isWeekend ? 'text-rose-500' : 'text-slate-700'}">${d}</span>
                         <span class="text-[8px] font-bold opacity-30 tracking-tighter">D${cDay}</span>
                         
-                        <!-- ขยาย EMOJI ให้ใหญ่ขึ้นตามคำขอ -->
+                        <!-- EMOJI Area -->
                         <div class="absolute top-1 right-1 flex flex-col gap-0.5">
-                            ${cDay === 7 ? '<span class="text-xl drop-shadow-sm" title="รอยต่อกะดึก (งีบกลางวัน!)">👻</span>' : ''}
-                        </div>
-                        <div class="absolute bottom-1">
-                            ${isPerfectOff ? '<span class="text-2xl drop-shadow-md animate-pulse">❤️</span>' : ''}
+                            ${emoji ? `<span class="text-lg drop-shadow-sm">${emoji}</span>` : ''}
                         </div>
                     </div>
                 `;
             }
+
+            // Legend HTML
+            const holidayListHTML = currentMonthHolidays.length > 0 
+                ? `<div class="w-full mt-4 pt-4 border-t border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-2">
+                    ${currentMonthHolidays.map(h => `
+                        <div class="flex items-center gap-2 text-xs text-slate-500">
+                            <span class="font-bold text-yellow-500">✨ ${h.date}</span>
+                            <span>${h.name}</span>
+                        </div>
+                      `).join('')}
+                   </div>`
+                : '';
 
             container.innerHTML = `
                 <div class="space-y-6">
@@ -399,32 +470,60 @@
                         <h2 class="text-lg font-black text-slate-800 uppercase tracking-tight">${monthLabel}</h2>
                         <button onclick="calendarBaseDate.setMonth(calendarBaseDate.getMonth()+1); render()" class="p-2 hover:bg-slate-50 rounded-xl transition-all"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>
                     </div>
-                    <div class="grid grid-cols-7 gap-3">
+                    <div class="grid grid-cols-7 gap-2 md:gap-3">
                         ${['อา','จ','อ','พ','พฤ','ศ','ส'].map(d => `<div class="text-center text-[10px] font-black text-slate-400 py-1 uppercase tracking-widest">${d}</div>`).join('')}
                         ${gridHTML}
                     </div>
-                    <div class="bg-white p-6 rounded-[2rem] border border-slate-100 flex flex-wrap items-center justify-center gap-10 shadow-sm">
-                        <div class="flex items-center gap-3"><span class="text-2xl">👻</span> <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Ghost Nap Transition</span></div>
-                        <div class="flex items-center gap-3"><span class="text-2xl">❤️</span> <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Perfect OFF Match</span></div>
+                    
+                    <!-- Legend & Holidays -->
+                    <div class="bg-white p-6 rounded-[2rem] border border-slate-100 flex flex-wrap items-center justify-center gap-6 shadow-sm">
+                        <div class="flex flex-wrap justify-center gap-4 md:gap-8">
+                            <div class="flex items-center gap-2"><span class="text-xl">👻</span> <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Ghost Nap</span></div>
+                            <div class="flex items-center gap-2"><span class="text-xl">🌟</span> <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Golden Ghost (Holiday)</span></div>
+                            <div class="flex items-center gap-2"><span class="text-xl">❤️</span> <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Perfect OFF</span></div>
+                            <div class="flex items-center gap-2"><span class="text-xl">💛</span> <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Golden OFF (Holiday)</span></div>
+                            <div class="flex items-center gap-2"><span class="text-xl">✨</span> <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Holiday (Work)</span></div>
+                        </div>
+                        ${holidayListHTML}
                     </div>
                 </div>
             `;
         }
 
-        // หน้า EDITOR
+        // --- EDITOR ---
         function renderEditor(container) {
+            let apiStatusColor = 'text-slate-400';
+            let apiStatusText = 'Ready';
+            if (holidayApiStatus === 'Loading') { apiStatusColor = 'text-blue-500'; apiStatusText = 'Fetching...'; }
+            if (holidayApiStatus === 'Success') { apiStatusColor = 'text-green-500'; apiStatusText = 'Updated!'; }
+            if (holidayApiStatus === 'Error') { apiStatusColor = 'text-rose-500'; apiStatusText = 'Failed (Offline?)'; }
+
             container.innerHTML = `
                 <div class="space-y-6 pb-10">
                     <div class="bg-white p-6 rounded-3xl border border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 shadow-sm">
                         <div>
                             <h2 class="text-xl font-black text-slate-800">Advanced Schedule Editor</h2>
-                            <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">Custom Cycle Mode</p>
+                            <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">Custom Cycle & Data</p>
                         </div>
                         <div class="flex gap-2">
                             <button onclick="exportData()" class="px-4 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border border-slate-100">Export JSON</button>
                             <button onclick="document.getElementById('file-input').click()" class="px-4 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border border-slate-100">Import JSON</button>
                             <input type="file" id="file-input" class="hidden" onchange="importData(event)">
                         </div>
+                    </div>
+
+                    <!-- API Section -->
+                    <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                         <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <h3 class="font-black text-slate-700">Thai Holidays Data</h3>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Status: <span class="${apiStatusColor}">${apiStatusText}</span></p>
+                            </div>
+                            <button onclick="fetchThaiHolidays()" class="px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-xl text-xs font-bold transition-all">
+                                ${holidayApiStatus === 'Loading' ? 'Loading...' : 'Force Refresh Holidays'}
+                            </button>
+                         </div>
+                         <textarea class="w-full h-24 bg-slate-50 rounded-xl p-3 text-[10px] font-mono border border-slate-100 text-slate-500" readonly>${JSON.stringify(holidaysData, null, 2)}</textarea>
                     </div>
 
                     <div id="editor-list" class="space-y-6">
@@ -469,10 +568,10 @@
 
                     <div class="p-10 bg-blue-600 rounded-[2.5rem] text-white shadow-2xl shadow-blue-200 text-center space-y-6">
                         <div class="inline-block p-4 bg-white/20 rounded-3xl mb-2">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v13a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2 2V5a2 2 0 0 1 2-2h11l5 5v13a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
                         </div>
                         <h3 class="text-2xl font-black uppercase tracking-tight">ตั้งค่าเสร็จสิ้นแล้ว!</h3>
-                        <p class="text-sm opacity-80 leading-relaxed max-w-sm mx-auto">ข้อมูลตารางชีวิตของคุณถูกบันทึกไว้อย่างปลอดภัยในเบราว์เซอร์นี้ คุณสามารถแก้ไขได้ทุกเมื่อ</p>
+                        <p class="text-sm opacity-80 leading-relaxed max-w-sm mx-auto">ข้อมูลตารางและวันหยุดของคุณถูกบันทึกไว้อย่างปลอดภัย</p>
                         <button onclick="goToDashboard()" class="w-full bg-white text-blue-600 py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-blue-50 transition-all active:scale-95 shadow-xl">Back to Dashboard</button>
                         <button onclick="if(confirm('คืนค่าตารางเริ่มต้น? ข้อมูลที่แก้ไขจะหายไป')) resetData()" class="text-[10px] font-bold uppercase tracking-widest opacity-50 hover:opacity-100">Reset to Default</button>
                     </div>
@@ -502,6 +601,8 @@
 
         function resetData() {
             scheduleData = JSON.parse(JSON.stringify(DEFAULT_SCHEDULE));
+            holidaysData = JSON.parse(JSON.stringify(DEFAULT_HOLIDAYS));
+            localStorage.setItem('hybrid_holidays_cache', JSON.stringify(holidaysData));
             saveData();
             render();
         }
@@ -517,11 +618,23 @@
             changeView('dashboard');
         }
 
+        // --- แก้ไขบัค Calendar Jump (-1 Day) ---
         function jumpToDate(isoStr) {
+            // isoStr Format: "YYYY-MM-DD"
+            const parts = isoStr.split('-').map(Number); // [2024, 12, 5]
+            // Note: Month in Date constructor is 0-indexed
+            const target = new Date(parts[0], parts[1] - 1, parts[2]);
             const today = new Date();
+            
+            // Set both to midnight to count pure days
+            target.setHours(0,0,0,0);
             today.setHours(0,0,0,0);
-            const target = new Date(isoStr);
-            const diffDays = Math.floor((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+            
+            // Calculate difference in milliseconds
+            const diffTime = target.getTime() - today.getTime();
+            // Use Round instead of Floor to avoid timezone/DST glitches
+            const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+            
             previewOffset = diffDays;
             changeView('dashboard');
         }
@@ -535,9 +648,10 @@
 
         // Export/Import
         function exportData() {
-            const data = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(scheduleData, null, 2));
+            const exportObj = { schedule: scheduleData, holidays: holidaysData };
+            const data = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj, null, 2));
             const a = document.createElement('a');
-            a.href = data; a.download = "hybrid_engineer_schedule.json"; a.click();
+            a.href = data; a.download = "hybrid_engineer_data.json"; a.click();
         }
 
         function importData(e) {
@@ -547,10 +661,27 @@
             reader.onload = (ev) => {
                 try {
                     const json = JSON.parse(ev.target.result);
-                    scheduleData = json; saveData(); changeView('dashboard');
+                    // Support legacy or new format
+                    if (json.schedule) {
+                        scheduleData = json.schedule;
+                        if(json.holidays) {
+                            holidaysData = json.holidays;
+                            localStorage.setItem('hybrid_holidays_cache', JSON.stringify(holidaysData));
+                        }
+                    } else {
+                        scheduleData = json; // Legacy format
+                    }
+                    saveData(); 
+                    changeView('dashboard');
+                    alert('Import เรียบร้อย!');
                 } catch(e) { alert('ไฟล์ไม่ถูกต้อง'); }
             };
             reader.readAsText(file);
+        }
+
+        // Attempt to auto-fetch holidays if cache is small (optional logic)
+        if (Object.keys(holidaysData).length < 20) {
+            fetchThaiHolidays();
         }
 
         // เริ่มต้นแอป
