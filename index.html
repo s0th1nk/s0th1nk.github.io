@@ -1,0 +1,483 @@
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { 
+  Clock, Calendar as CalendarIcon, Dumbbell, Code, Coffee, Moon, Sun, Heart, 
+  Zap, ChevronRight, Info, ChevronLeft, Star, Ghost, MapPin, Bath, Utensils,
+  Settings, Save, Download, Upload, Plus, Trash2, RefreshCw
+} from 'lucide-react';
+
+/**
+ * ==========================================
+ * UI ICON MAPPING
+ * ==========================================
+ * ส่วนนี้ใช้สำหรับแปลงชื่อ Icon ที่เก็บเป็น String ใน Database/LocalStorage 
+ * ให้กลายเป็น Component ของ Lucide-React เพื่อแสดงผลในหน้าจอ
+ */
+const IconMap = {
+  Zap, Clock, CalendarIcon, Dumbbell, Code, Coffee, Moon, Sun, Heart, 
+  ChevronRight, Info, ChevronLeft, Star, Ghost, MapPin, Bath, Utensils, Settings, Save
+};
+
+const RenderIcon = ({ name, size = 16, className = "" }) => {
+  const IconComponent = IconMap[name] || Info;
+  return <IconComponent size={size} className={className} />;
+};
+
+/**
+ * ==========================================
+ * INITIAL DATA (ตารางชีวิตฉบับละเอียด 12 วัน)
+ * ==========================================
+ * ข้อมูลเริ่มต้นที่ใช้ตามแผน "Lazy Morning Edition"
+ */
+const INITIAL_SCHEDULE = [
+  {
+    id: 1, title: 'กะเช้า (Day 1-3) - วินัยสร้างกล้ามเนื้อ', type: 'morning_shift', days: [1, 2, 3],
+    color: 'bg-yellow-50 border-yellow-200 text-yellow-800', accent: 'bg-yellow-500',
+    routine: [
+      { start: '05:45', end: '06:15', task: 'ตื่น / อาบน้ำ / แต่งตัว (Willpower สูงสุด)', icon: 'Zap' },
+      { start: '06:15', end: '06:30', task: 'เดินทาง (15 นาที)', icon: 'MapPin' },
+      { start: '06:30', end: '07:00', task: 'ถึงที่ทำงาน / รับเวร / ดื่ม Protein Shake', icon: 'Coffee' },
+      { start: '07:00', end: '15:00', task: 'ทำงานกะเช้า (พักกินข้าวเที่ยง 1 ชั่วโมง)', icon: 'Code' },
+      { start: '15:00', end: '15:15', task: 'เดินทางไปยิม (15 นาที)', icon: 'MapPin' },
+      { start: '15:15', end: '17:15', task: 'ยิม (Weight Training) - เน้นท่า Compound', icon: 'Dumbbell' },
+      { start: '17:15', end: '17:45', task: 'อาบน้ำที่ยิม (ลดขั้นตอนที่บ้าน)', icon: 'Bath' },
+      { start: '17:45', end: '18:00', task: 'เดินทางกลับบ้าน', icon: 'MapPin' },
+      { start: '18:00', end: '19:00', task: 'กินมื้อเย็น (มื้อใหญ่) - ต้องจบก่อนทุ่ม', icon: 'Utensils' },
+      { start: '19:00', end: '22:15', task: '[พักผ่อน/Coding] ท้องกำลังย่อย ห้ามนอนราบ!', icon: 'Code' },
+      { start: '22:15', end: '05:45', task: 'เข้านอน (นอน 7.5 ชม.)', icon: 'Moon' },
+    ]
+  },
+  {
+    id: 2, title: 'กะบ่าย (Day 4-6) - ตื่นสายมีคุณภาพ', type: 'afternoon_shift', days: [4, 5, 6],
+    color: 'bg-orange-50 border-orange-200 text-orange-800', accent: 'bg-orange-500',
+    routine: [
+      { start: '09:30', end: '10:15', task: 'ตื่นแบบ Lazy Morning / จิบกาแฟ / พักผ่อน', icon: 'Coffee' },
+      { start: '10:15', end: '10:30', task: 'เดินทางไปยิม', icon: 'MapPin' },
+      { start: '10:30', end: '12:30', task: 'ยิม (Weight Training) ปลุกร่างกาย', icon: 'Dumbbell' },
+      { start: '12:30', end: '13:00', task: 'อาบน้ำที่ยิม', icon: 'Bath' },
+      { start: '13:00', end: '14:15', task: 'กินมื้อใหญ่ (มื้อหลัก) เน้นพลังงานเข้ากะ', icon: 'Utensils' },
+      { start: '14:15', end: '14:30', task: 'เดินทางไปทำงาน (15 นาที)', icon: 'MapPin' },
+      { start: '15:00', end: '23:00', task: 'ทำงานกะบ่าย (มื้อรอง 19:00 ของเบาๆ)', icon: 'Code' },
+      { start: '23:00', end: '23:15', task: 'เดินทางกลับบ้าน', icon: 'MapPin' },
+      { start: '23:15', end: '00:00', task: 'อาบน้ำ / มื้อก่อนนอน (เบามาก เช่น สลัด)', icon: 'Utensils' },
+      { start: '00:00', end: '02:00', task: '[เวลาพัก/Coding] ช่วงเงียบสงบ Deep Work', icon: 'Code' },
+      { start: '02:00', end: '09:30', task: 'เข้านอน', icon: 'Moon' },
+    ]
+  },
+  {
+    id: 3, title: 'รอยต่อ (Day 7) - กลยุทธ์งีบปูพื้น', type: 'transition', days: [7],
+    color: 'bg-blue-50 border-blue-200 text-blue-800', accent: 'bg-blue-500',
+    routine: [
+      { start: '10:00', end: '11:00', task: 'ตื่นนอน / พักผ่อนตามอัธยาศัย', icon: 'Sun' },
+      { start: '11:00', end: '12:30', task: 'วิ่ง Easy Run (โซน 2) ชิลๆ', icon: 'Zap' },
+      { start: '12:30', end: '13:30', task: 'อาบน้ำ / กินมื้อใหญ่', icon: 'Utensils' },
+      { start: '13:30', end: '15:00', task: 'พักผ่อน / Coding เล็กน้อย', icon: 'Code' },
+      { start: '15:00', end: '18:00', task: 'นอนกลางวัน (Nap 3 ชม.) ลดความล้ากะดึก', icon: 'Ghost' },
+      { start: '18:00', end: '19:00', task: 'ตื่นมาอาบน้ำ / กินมื้อเย็น', icon: 'Bath' },
+      { start: '19:00', end: '22:30', task: 'พักผ่อน / อยู่กับแฟน ร่างกายตื่นพร้อมเข้ากะ', icon: <Heart size={14} className="fill-rose-500 text-rose-500 inline"/> },
+      { start: '23:00', end: '07:00', task: 'ทำงานกะดึกคืนที่ 1 (มื้อดึก 01:00)', icon: 'Code' },
+    ]
+  },
+  {
+    id: 4, title: 'กะดึก (Day 8-9) - สู้ความง่วงด้วยวิ่ง', type: 'night_shift', days: [8, 9],
+    color: 'bg-indigo-50 border-indigo-200 text-indigo-800', accent: 'bg-indigo-500',
+    routine: [
+      { start: '07:15', end: '08:00', task: 'กลับบ้าน / กินมื้อเช้า (มื้อใหญ่)', icon: 'Utensils' },
+      { start: '08:00', end: '10:00', task: 'พักผ่อน/Coding รออาหารย่อย', icon: 'Code' },
+      { start: '10:00', end: '17:30', task: 'นอนหลับยาว (ม่านกันแสง 100%)', icon: 'Moon' },
+      { start: '17:30', end: '18:30', task: 'วิ่ง Tempo (รีเซ็ตอุณหภูมิร่างกาย)', icon: 'Zap' },
+      { start: '18:30', end: '19:30', task: 'อาบน้ำ / กินมื้อใหญ่', icon: 'Utensils' },
+      { start: '19:30', end: '22:30', task: 'พักผ่อน / อยู่กับแฟน / Coding', icon: 'Heart' },
+      { start: '23:00', end: '07:00', task: 'ทำงานกะดึก', icon: 'Code' },
+    ]
+  },
+  {
+    id: 5, title: 'วัน OFF 1 (Day 10) - กู้ซากและ Reset', type: 'off_day_1', days: [10],
+    color: 'bg-emerald-50 border-emerald-200 text-emerald-800', accent: 'bg-emerald-500',
+    routine: [
+      { start: '07:15', end: '08:00', task: 'กลับบ้าน / กินมื้อเช้า (เบาๆ)', icon: 'Coffee' },
+      { start: '08:00', end: '12:00', task: 'Anchor Nap (4 ชม.) ห้ามนอนเกินเที่ยง!', icon: 'Moon' },
+      { start: '12:00', end: '13:00', task: 'ตื่นมาอาบน้ำ / กินมื้อเที่ยง (มื้อใหญ่)', icon: 'Utensils' },
+      { start: '13:00', end: '16:30', task: 'พักผ่อนอิสระ / แฟน', icon: 'Heart' },
+      { start: '16:30', end: '18:30', task: 'Long Run (ซ้อมมาราธอนให้ล้า บังคับหลับ)', icon: 'Zap' },
+      { start: '18:30', end: '20:00', task: 'อาบน้ำ / กินมื้อเย็นกับแฟน (มื้อใหญ่)', icon: 'Utensils' },
+      { start: '20:00', end: '22:00', task: 'พักผ่อนกับแฟน รออาหารย่อย', icon: 'Heart' },
+      { start: '22:00', end: '08:30', task: 'เข้านอน Reset ระบบร่างกาย', icon: 'Moon' },
+    ]
+  },
+  {
+    id: 6, title: 'วัน OFF 2-3 (Day 11-12) - สวรรค์', type: 'off_day_heaven', days: [11, 12],
+    color: 'bg-purple-50 border-purple-200 text-purple-800', accent: 'bg-purple-500',
+    routine: [
+      { start: '08:30', end: '09:30', task: 'ตื่นนอน (Recovery 10 ชม.) / มื้อเช้าเบาๆ', icon: 'Coffee' },
+      { start: '09:30', end: '11:30', task: 'ยิม (Weight Training)', icon: 'Dumbbell' },
+      { start: '12:00', end: '13:00', task: 'กินมื้อเที่ยง (มื้อใหญ่)', icon: 'Utensils' },
+      { start: '13:00', end: '18:00', task: '[เวลาอิสระ/Coding/Docker]', icon: 'Code' },
+      { start: '18:00', end: '19:30', task: 'กินมื้อเย็นกับแฟน (มื้อใหญ่)', icon: 'Heart' },
+      { start: '19:30', end: '22:15', task: 'พักผ่อนยาวๆ', icon: 'Sun' },
+      { start: '22:15', end: '05:45', task: 'เข้านอน (เตรียมตื่นเช้าในวันถัดไป)', icon: 'Moon' },
+    ]
+  }
+];
+
+const thaiHolidays = {
+  "2024-12-05": "วันพ่อแห่งชาติ", "2024-12-10": "วันรัฐธรรมนูญ", "2024-12-31": "วันสิ้นปี",
+  "2025-01-01": "วันขึ้นปีใหม่", "2025-02-12": "วันมาฆบูชา", "2025-04-06": "วันจักรี",
+  "2025-04-13": "วันสงกรานต์", "2025-04-14": "วันสงกรานต์", "2025-04-15": "วันสงกรานต์",
+};
+
+const App = () => {
+  // --- การจัดการสถานะข้อมูล (State Management) ---
+
+  // ดึงวันที่เริ่มรอบจาก LocalStorage
+  const [startDateStr, setStartDateStr] = useState(() => {
+    return localStorage.getItem('hybrid_engineer_start_date') || '2024-11-25';
+  });
+
+  // ดึงตารางกิจกรรมจาก LocalStorage หรือใช้ค่าเริ่มต้น
+  const [scheduleData, setScheduleData] = useState(() => {
+    const saved = localStorage.getItem('hybrid_engineer_schedule_json');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) { return INITIAL_SCHEDULE; }
+    }
+    return INITIAL_SCHEDULE;
+  });
+
+  const [now, setNow] = useState(new Date()); 
+  const [view, setView] = useState('dashboard'); 
+  const [calDate, setCalDate] = useState(new Date()); 
+  const [previewOffset, setPreviewOffset] = useState(0); 
+  const fileInputRef = useRef(null);
+
+  // อัปเดตเวลาทุกนาที
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 1000); // อัปเดตทุกวิ เพื่อให้เข็มนาทีเดินสวยๆ
+    return () => clearInterval(timer);
+  }, []);
+
+  // บันทึกวันที่เริ่มงานลงเครื่อง
+  useEffect(() => {
+    localStorage.setItem('hybrid_engineer_start_date', startDateStr);
+  }, [startDateStr]);
+
+  // บันทึกตารางกิจกรรมลงเครื่อง
+  useEffect(() => {
+    localStorage.setItem('hybrid_engineer_schedule_json', JSON.stringify(scheduleData));
+  }, [scheduleData]);
+
+  // --- การคำนวณรอบวัน (Business Logic) ---
+
+  const totalCycleDays = useMemo(() => {
+    let maxDay = 0;
+    scheduleData.forEach(phase => {
+      phase.days.forEach(d => { if (d > maxDay) maxDay = d; });
+    });
+    return maxDay || 1;
+  }, [scheduleData]);
+
+  const getCycleDayForDate = (targetDate) => {
+    const start = new Date(startDateStr);
+    start.setHours(0,0,0,0);
+    const target = new Date(targetDate);
+    target.setHours(0,0,0,0);
+    const diffTime = target.getTime() - start.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    return ((diffDays % totalCycleDays + totalCycleDays) % totalCycleDays) + 1;
+  };
+
+  const displayInfo = useMemo(() => {
+    const targetDate = new Date(now);
+    targetDate.setDate(targetDate.getDate() + previewOffset);
+    
+    const d = getCycleDayForDate(targetDate);
+    const p = scheduleData.find(phase => phase.days.includes(d));
+    
+    let currentTask = null;
+    let nextTask = null;
+    const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+
+    if (p && previewOffset === 0) {
+      const sorted = [...p.routine].sort((a,b) => a.start.localeCompare(b.start));
+      for (let i=0; i<sorted.length; i++) {
+        const item = sorted[i];
+        const nxt = sorted[i+1] || sorted[0];
+        const isActive = (timeStr >= item.start && (timeStr < item.end || item.end < item.start)) || 
+                         (item.end < item.start && timeStr < item.end);
+        if (isActive) { currentTask = item; nextTask = nxt; break; }
+      }
+      if (!currentTask) { currentTask = sorted[0]; nextTask = sorted[1]; }
+    }
+
+    return { 
+      cycleDay: d, 
+      phase: p, 
+      currentTask, 
+      nextTask,
+      targetDateLabel: targetDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }),
+      isToday: previewOffset === 0
+    };
+  }, [now, startDateStr, scheduleData, previewOffset, totalCycleDays]);
+
+  const calendarDays = useMemo(() => {
+    const year = calDate.getFullYear();
+    const month = calDate.getMonth();
+    const days = [];
+    const firstDay = new Date(year, month, 1).getDay();
+    const total = new Date(year, month + 1, 0).getDate();
+
+    for (let i = 0; i < firstDay; i++) days.push(null);
+    for (let d = 1; d <= total; d++) {
+      const date = new Date(year, month, d);
+      const key = date.toISOString().split('T')[0];
+      const cDay = getCycleDayForDate(date);
+      days.push({
+        dayNum: d, key, cDay, 
+        phase: scheduleData.find(p => p.days.includes(cDay)),
+        isWeekend: date.getDay() === 0 || date.getDay() === 6,
+        holiday: thaiHolidays[key],
+        isToday: new Date().toISOString().split('T')[0] === key
+      });
+    }
+    return days;
+  }, [calDate, startDateStr, scheduleData, totalCycleDays]);
+
+  // --- Handlers ---
+  const handleExport = () => {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(scheduleData, null, 2));
+    const a = document.createElement('a');
+    a.href = dataStr;
+    a.download = "hybrid_engineer_schedule.json";
+    a.click();
+  };
+
+  const handleImport = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const json = JSON.parse(ev.target.result);
+        setScheduleData(json);
+        setView('dashboard');
+      } catch (err) { alert("ข้อมูลไม่ถูกต้อง"); }
+    };
+    reader.readAsText(file);
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans text-slate-900 pb-20">
+      <div className="max-w-4xl mx-auto space-y-6">
+        
+        {/* Navigation Bar */}
+        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setView('dashboard'); setPreviewOffset(0); }}>
+             <div className="p-3 bg-yellow-500 rounded-2xl text-white shadow-lg">
+                <Zap size={24} fill="white"/>
+             </div>
+             <div>
+                <h1 className="text-xl font-bold tracking-tight">Hybrid Planner</h1>
+                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Efficiency Edition</p>
+             </div>
+          </div>
+          
+          <div className="flex bg-slate-100 p-1.5 rounded-2xl overflow-x-auto">
+            <button onClick={() => { setView('dashboard'); setPreviewOffset(0); }} className={`px-5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${view === 'dashboard' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500'}`}><Clock size={14} className="inline mr-2"/> Dashboard</button>
+            <button onClick={() => setView('calendar')} className={`px-5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${view === 'calendar' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500'}`}><CalendarIcon size={14} className="inline mr-2"/> Calendar</button>
+            <button onClick={() => setView('editor')} className={`px-5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${view === 'editor' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500'}`}><Settings size={14} className="inline mr-2"/> Setup</button>
+          </div>
+        </header>
+
+        {view === 'dashboard' && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            
+            {/* Status Card */}
+            <div className={`p-1 rounded-3xl shadow-xl transition-colors duration-700 ${displayInfo.phase?.accent || 'bg-slate-200'}`}>
+              <div className="bg-white rounded-[1.4rem] p-6 md:p-8 flex flex-col md:flex-row gap-8 items-center">
+                <div className="flex-1 space-y-5 text-center md:text-left w-full">
+                  <div className="flex items-center justify-between">
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-widest">
+                      <Clock size={14}/> Cycle Day {displayInfo.cycleDay} / {totalCycleDays}
+                    </div>
+                    <div className="text-xs font-bold text-slate-400 flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div> 
+                      {now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h2 className="text-slate-400 font-bold text-xs mb-2 uppercase tracking-tight">
+                      {displayInfo.isToday ? "ขณะนี้ควรทำ:" : `ส่องตารางล่วงหน้า: ${displayInfo.targetDateLabel}`}
+                    </h2>
+                    <div className="text-2xl md:text-3xl font-black text-slate-800 flex items-center justify-center md:justify-start gap-4">
+                      <div className="p-3 bg-slate-50 text-blue-500 rounded-2xl">
+                        <RenderIcon name={displayInfo.currentTask?.icon || 'Zap'} size={28} />
+                      </div>
+                      <span className="leading-tight">{displayInfo.currentTask?.task || "พักผ่อนอิสระ"}</span>
+                    </div>
+                  </div>
+
+                  {displayInfo.isToday && displayInfo.nextTask && (
+                    <div className="text-xs text-slate-500 font-bold bg-slate-50 px-4 py-2 rounded-xl inline-block border border-slate-100">
+                      ถัดไป: <span className="text-slate-800">{displayInfo.nextTask.task}</span> ({displayInfo.nextTask.start})
+                    </div>
+                  )}
+                </div>
+                
+                {/* Progress Visual */}
+                <div className="w-44 h-44 relative flex items-center justify-center bg-slate-50 rounded-full border-4 border-slate-100 overflow-hidden shrink-0 shadow-inner">
+                    <div className={`absolute bottom-0 w-full transition-all duration-1000 ${displayInfo.phase?.accent || 'bg-blue-500'}`} style={{ height: `${(displayInfo.cycleDay/totalCycleDays)*100}%`, opacity: 0.15 }}></div>
+                    <div className="z-10 text-center">
+                      <span className="block text-6xl font-black text-slate-800 leading-none">{displayInfo.cycleDay}</span>
+                      <span className="text-[10px] font-black uppercase text-slate-400 tracking-tighter mt-1 block">Day of {totalCycleDays}</span>
+                    </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Routine Timeline with Sneak Peek */}
+            <div className="bg-white rounded-[2rem] border border-slate-100 overflow-hidden shadow-sm">
+              <div className="p-6 border-b border-slate-50 flex items-center justify-between flex-wrap gap-4">
+                <div>
+                  <h3 className="font-bold text-slate-800 text-lg">{displayInfo.phase?.title}</h3>
+                  <p className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">{displayInfo.targetDateLabel}</p>
+                </div>
+                <div className="flex bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
+                  <button onClick={() => setPreviewOffset(prev => prev - 1)} className="p-2 hover:bg-white hover:shadow-sm rounded-xl text-slate-400 transition-all active:scale-90"><ChevronLeft size={20}/></button>
+                  <button onClick={() => setPreviewOffset(0)} className={`px-4 py-1 rounded-xl text-[10px] font-black uppercase transition-all ${previewOffset === 0 ? 'bg-blue-500 text-white shadow-md' : 'text-slate-400'}`}>Today</button>
+                  <button onClick={() => setPreviewOffset(prev => prev + 1)} className="p-2 hover:bg-white hover:shadow-sm rounded-xl text-slate-400 transition-all active:scale-90"><ChevronRight size={20}/></button>
+                </div>
+              </div>
+
+              <div className="divide-y divide-slate-50">
+                {displayInfo.phase?.routine.map((item, idx) => {
+                  const isActive = displayInfo.currentTask === item && displayInfo.isToday;
+                  return (
+                    <div key={idx} className={`flex items-center gap-5 p-5 transition-all ${isActive ? 'bg-blue-50/40' : 'hover:bg-slate-50/20'}`}>
+                      <div className={`text-xs font-black w-24 shrink-0 ${isActive ? 'text-blue-600' : 'text-slate-400'}`}>{item.start} - {item.end}</div>
+                      <div className={`p-2.5 rounded-xl shrink-0 ${isActive ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-400'}`}><RenderIcon name={item.icon} size={18} /></div>
+                      <div className={`flex-1 text-sm ${isActive ? 'font-black text-slate-800' : 'font-medium text-slate-600'}`}>{item.task}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Quick Config */}
+            <div className="bg-white p-6 rounded-3xl border border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-blue-50 text-blue-500 rounded-2xl"><CalendarIcon size={20}/></div>
+                <div>
+                  <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Cycle Start Date</div>
+                  <input type="date" value={startDateStr} onChange={(e) => setStartDateStr(e.target.value)} className="font-bold text-slate-700 outline-none cursor-pointer hover:text-blue-600 transition-colors"/>
+                </div>
+              </div>
+              <p className="text-[10px] text-slate-400 font-bold max-w-[200px] leading-relaxed md:text-right italic">*ตั้งค่ากะเช้าวันแรกของคุณ ระบบจะจำค่าไว้ให้ตลอดไป</p>
+            </div>
+          </div>
+        )}
+
+        {view === 'calendar' && (
+          <div className="space-y-6 animate-in fade-in zoom-in-95 duration-500">
+            <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex items-center justify-between">
+               <button onClick={() => setCalDate(new Date(calDate.getFullYear(), calDate.getMonth() - 1, 1))} className="p-2 hover:bg-slate-100 rounded-xl transition-all"><ChevronLeft size={24}/></button>
+               <h2 className="text-xl font-black text-slate-800 uppercase">{calDate.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' })}</h2>
+               <button onClick={() => setCalDate(new Date(calDate.getFullYear(), calDate.getMonth() + 1, 1))} className="p-2 hover:bg-slate-100 rounded-xl transition-all"><ChevronRight size={24}/></button>
+            </div>
+
+            <div className="grid grid-cols-7 gap-3">
+               {['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'].map(d => <div key={d} className="text-center text-[10px] font-black text-slate-400 py-2 uppercase">{d}</div>)}
+               {calendarDays.map((day, idx) => {
+                 if (!day) return <div key={`empty-${idx}`} className="aspect-square opacity-20"></div>;
+                 const isOffMatch = day.phase?.type.includes('off') && (day.isWeekend || day.holiday);
+                 const isGhostDay = day.cDay === 7;
+                 
+                 return (
+                   <div key={day.key} onClick={() => {
+                      const today = new Date(); today.setHours(0,0,0,0);
+                      const target = new Date(day.key);
+                      const diffDays = Math.floor((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                      setPreviewOffset(diffDays); setView('dashboard');
+                   }} className={`aspect-square relative flex flex-col items-center justify-center rounded-2xl border-2 cursor-pointer transition-all hover:scale-105 active:scale-95
+                      ${day.phase?.color || 'bg-white border-slate-100'} 
+                      ${day.isToday ? 'border-blue-500 ring-4 ring-blue-50 z-10' : 'border-transparent'}
+                      ${isOffMatch ? 'ring-2 ring-rose-400 shadow-lg' : ''}
+                   `}>
+                      <span className={`text-sm font-black ${day.isWeekend ? 'text-rose-500' : 'text-slate-700'}`}>{day.dayNum}</span>
+                      <span className="text-[8px] font-bold opacity-30">D{day.cDay}</span>
+                      
+                      {/* ขยายขนาด EMOJI ตามคำขอ */}
+                      <div className="absolute top-1 right-1 flex flex-col gap-0.5">
+                        {isGhostDay && <span className="text-lg leading-none" title="รอยต่อกะดึก (งีบด่วน!)">👻</span>}
+                        {day.holiday && <span className="text-[8px] bg-rose-500 text-white px-1 rounded-full">{day.holiday.substring(0,3)}</span>}
+                      </div>
+                      
+                      <div className="absolute bottom-1">
+                        {isOffMatch && <span className="text-xl leading-none">❤️</span>}
+                      </div>
+                   </div>
+                 );
+               })}
+            </div>
+            
+            <div className="bg-white p-6 rounded-[2rem] border border-slate-100 flex items-center justify-center gap-8 shadow-sm">
+                <div className="flex items-center gap-2"><span className="text-xl">👻</span> <span className="text-[10px] font-black text-slate-400 uppercase">Ghost Nap Transition</span></div>
+                <div className="flex items-center gap-2"><span className="text-xl">❤️</span> <span className="text-[10px] font-black text-slate-400 uppercase">Perfect OFF Match</span></div>
+            </div>
+          </div>
+        )}
+
+        {view === 'editor' && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 pb-10">
+            <div className="bg-white p-6 rounded-3xl border border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
+              <h2 className="text-xl font-black text-slate-800">Advanced Schedule Editor</h2>
+              <div className="flex gap-2">
+                <button onClick={handleExport} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-xs font-bold transition-all flex items-center gap-2"><Download size={14}/> Export</button>
+                <button onClick={() => fileInputRef.current?.click()} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-xs font-bold transition-all flex items-center gap-2"><Upload size={14}/> Import</button>
+                <input type="file" ref={fileInputRef} className="hidden" accept=".json" onChange={handleImport} />
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              {scheduleData.map((phase) => (
+                <div key={phase.id} className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
+                  <div className={`p-1.5 ${phase.accent}`}></div>
+                  <div className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                       <input value={phase.title} onChange={(e) => setScheduleData(prev => prev.map(p => p.id === phase.id ? {...p, title: e.target.value} : p))} className="text-lg font-black text-slate-800 border-b-2 border-slate-50 focus:border-blue-300 outline-none" placeholder="ชื่อกะ"/>
+                       <input value={phase.days.join(',')} onChange={(e) => setScheduleData(prev => prev.map(p => p.id === phase.id ? {...p, days: e.target.value.split(',').map(n => parseInt(n)).filter(n => !isNaN(n))} : p))} className="font-bold text-slate-500 border-b-2 border-slate-50 focus:border-blue-300 outline-none" placeholder="เลขวันที่ในรอบ (เช่น 1,2,3)"/>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      {phase.routine.map((item, idx) => (
+                        <div key={idx} className="flex gap-2 bg-slate-50 p-3 rounded-2xl group">
+                           <input value={item.start} onChange={(e) => setScheduleData(prev => prev.map(p => p.id === phase.id ? {...p, routine: p.routine.map((r, i) => i === idx ? {...r, start: e.target.value} : r)} : p))} className="w-16 text-[10px] font-black bg-white px-2 py-1 rounded-lg border border-slate-100 outline-none"/>
+                           <input value={item.task} onChange={(e) => setScheduleData(prev => prev.map(p => p.id === phase.id ? {...p, routine: p.routine.map((r, i) => i === idx ? {...r, task: e.target.value} : r)} : p))} className="flex-1 text-xs font-bold bg-white px-3 py-1 rounded-lg border border-slate-100 outline-none"/>
+                           <button onClick={() => setScheduleData(prev => prev.map(p => p.id === phase.id ? {...p, routine: p.routine.filter((_, i) => i !== idx)} : p))} className="text-rose-400 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={16}/></button>
+                        </div>
+                      ))}
+                      <button onClick={() => setScheduleData(prev => prev.map(p => p.id === phase.id ? {...p, routine: [...p.routine, {start: '09:00', end: '10:00', task: 'กิจกรรมใหม่', icon: 'Clock'}]} : p))} className="w-full py-2 border-2 border-dashed border-slate-100 rounded-2xl text-[10px] font-black text-slate-400 hover:bg-slate-50 transition-all uppercase mt-2">+ Add Activity</button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              
+              <button onClick={() => setScheduleData(prev => [...prev, {id: Date.now(), title: 'Phase ใหม่', days: [], accent: 'bg-blue-500', color: 'bg-blue-50', routine: []}])} className="w-full p-6 border-2 border-dashed border-slate-200 rounded-[2rem] text-slate-400 font-black hover:border-blue-200 hover:text-blue-500 transition-all uppercase">+ Create New Phase</button>
+              
+              <div className="p-8 bg-blue-600 rounded-[2rem] text-white shadow-xl shadow-blue-100">
+                <h3 className="text-xl font-black mb-2 flex items-center gap-2"><Save size={20}/> Save & Preview</h3>
+                <p className="text-xs opacity-80 mb-6 leading-relaxed">ข้อมูลทั้งหมดจะถูกบันทึกอัตโนมัติลงใน Browser นี้ คุณสามารถ Export เป็นไฟล์เก็บไว้สำรองได้</p>
+                <button onClick={() => { setView('dashboard'); window.scrollTo(0,0); }} className="w-full bg-white text-blue-600 py-4 rounded-2xl font-black shadow-lg hover:bg-blue-50 transition-all active:scale-95 uppercase tracking-widest">Done! Return to Dashboard</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <footer className="text-center pb-8 opacity-40">
+           <p className="text-[9px] font-black uppercase tracking-[0.2em] mb-1">Dynamic Hybrid System • Revision 2.5</p>
+           <p className="text-[8px] font-medium">Efficiency is the only freedom for Engineers</p>
+        </footer>
+      </div>
+    </div>
+  );
+};
+
+export default App;
