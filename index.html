@@ -42,7 +42,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-black tracking-tight leading-none">Hybrid Planner</h1>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Version 2.1 (MyHora Edition)</p>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Version 2.2 (CORS Fixed)</p>
                 </div>
             </div>
             
@@ -216,14 +216,17 @@
             return icons[name] || icons.Sun;
         }
 
-        // --- HOLIDAYS API FETCHING (MyHora) ---
+        // --- HOLIDAYS API FETCHING (MyHora + CORS Proxy) ---
         async function fetchThaiHolidays() {
             holidayApiStatus = 'Loading';
             renderEditor(document.getElementById('app-content'));
             
             try {
-                // MyHora JSON API
-                const response = await fetch('https://www.myhora.com/calendar/ical/holiday.aspx?latest.json');
+                // แก้ปัญหา CORS โดยใช้ allorigins Proxy
+                const targetUrl = 'https://www.myhora.com/calendar/ical/holiday.aspx?latest.json';
+                const proxyUrl = 'https://api.allorigins.win/raw?url=';
+                
+                const response = await fetch(proxyUrl + encodeURIComponent(targetUrl));
                 if (response.ok) {
                     const data = await response.json();
                     
