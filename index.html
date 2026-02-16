@@ -27,13 +27,37 @@
             70% { border-color: #60a5fa; box-shadow: 0 0 0 6px rgba(59, 130, 246, 0); }
             100% { border-color: #3b82f6; box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
         }
+
+        /* --- Custom Responsive Logic for Calendar (iPhone/Small Screen < 540px) --- */
+        /* Default (Mobile First): ถ้ามีคลาส has-emoji */
+        .cell-content.has-emoji .date-number {
+            display: none; /* ซ่อนเลขวันที่บนมือถือถ้ามี emoji */
+        }
+        .cell-content.has-emoji .emoji-wrapper {
+            position: static; /* ให้อยู่ใน flow ปกติ (ตรงกลาง) */
+            font-size: 1.75rem; /* ขยายขนาด emoji */
+            line-height: 1;
+        }
+
+        /* Desktop/Tablet (Width >= 540px) */
+        @media (min-width: 540px) {
+            .cell-content.has-emoji .date-number {
+                display: block !important; /* กลับมาแสดงเลขวันที่ */
+            }
+            .cell-content.has-emoji .emoji-wrapper {
+                position: absolute; /* กลับไปลอยมุมขวาบน */
+                top: 0.25rem;
+                right: 0.25rem;
+                font-size: 1.125rem; /* ขนาดปกติ */
+            }
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 pb-20">
 
     <div class="max-w-4xl mx-auto p-4 md:p-8 space-y-6">
         <!-- ==========================================
-             ส่วนหัว (Header & Navigation)
+              ส่วนหัว (Header & Navigation)
              ========================================== -->
         <header class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
             <div class="flex items-center gap-3 cursor-pointer" onclick="goToDashboard()">
@@ -42,7 +66,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-black tracking-tight leading-none">Hybrid Planner</h1>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Version 2.2 (CORS Fixed)</p>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Version 2.3 (CE Year Fixed)</p>
                 </div>
             </div>
             
@@ -62,8 +86,8 @@
     </div>
 
     <!-- ==========================================
-         JAVASCRIPT (Vanilla JS)
-         ========================================== -->
+          JAVASCRIPT (Vanilla JS)
+          ========================================== -->
     <script>
         /**
          * 1. ข้อมูลตั้งต้น (INITIAL DATA)
@@ -159,7 +183,7 @@
             }
         ];
 
-        // วันหยุดเริ่มต้น (Hardcoded 2025-2026 จาก MyHora)
+        // วันหยุดเริ่มต้น (ใช้ ค.ศ. 2025-2026 ตามที่ขอ)
         const DEFAULT_HOLIDAYS = {
             // --- 2025 ---
             "2025-01-01": "วันขึ้นปีใหม่",
@@ -350,7 +374,9 @@
             const cDay = getCycleDay(targetDate);
             const phase = scheduleData.find(p => p.days.includes(cDay));
             const isToday = previewOffset === 0;
-            const targetLabel = targetDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
+            
+            // Fix: บังคับแสดงปีเป็น ค.ศ. (u-ca-gregory)
+            const targetLabel = targetDate.toLocaleDateString('th-TH-u-ca-gregory', { day: 'numeric', month: 'long', year: 'numeric' });
 
             let currentTask = null;
             if (phase) {
@@ -448,18 +474,7 @@
                         </div>
                     </div>
                     
-                    <!-- Quick Setting (for Dashboard) -->
-                    <div class="bg-white p-6 rounded-3xl border border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
-                        <div class="flex items-center gap-4">
-                            <div class="p-3 bg-blue-50 text-blue-500 rounded-2xl">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                            </div>
-                            <div>
-                                <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Cycle Start Date</div>
-                                <input type="date" value="${startDateStr}" onchange="updateStartDate(this.value)" class="font-bold text-slate-700 outline-none border-b border-transparent hover:border-blue-200 focus:border-blue-500 transition-all">
-                            </div>
-                        </div>
-                    </div>
+                    <!-- Quick Setting Removed from Dashboard as requested -->
                 </div>
             `;
             startClock();
@@ -471,7 +486,8 @@
             const month = calendarBaseDate.getMonth();
             const firstDay = new Date(year, month, 1).getDay();
             const totalDays = new Date(year, month + 1, 0).getDate();
-            const monthLabel = calendarBaseDate.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' });
+            // Fix: บังคับแสดงปีเป็น ค.ศ. (u-ca-gregory)
+            const monthLabel = calendarBaseDate.toLocaleDateString('th-TH-u-ca-gregory', { month: 'long', year: 'numeric' });
 
             let gridHTML = '';
             // Spacer for empty days before the 1st
@@ -509,19 +525,25 @@
                 else if (isGhost) emoji = '👻';
                 else if (holidayName) emoji = '✨'; // Just Holiday
 
+                // --- Responsive Logic ---
+                // ใช้ CSS Class ใน <style> ด้านบนเพื่อจัดการการซ่อน/แสดง
+                const hasEmojiClass = emoji ? 'has-emoji' : '';
+
                 gridHTML += `
                     <div onclick="jumpToDate('${isoKey}')" 
-                         class="aspect-square relative flex flex-col items-center justify-center rounded-2xl border-2 cursor-pointer transition-all hover:scale-105 active:scale-95
-                        ${phase?.color || 'bg-white border-slate-50'} 
-                        ${isToday ? 'border-blue-500 ring-4 ring-blue-50 z-10' : 'border-transparent'}
-                        ${isPerfectOff ? 'ring-2 ring-rose-200 shadow-md' : ''}">
+                         class="aspect-square relative flex flex-col items-center justify-center rounded-2xl border-2 cursor-pointer transition-all hover:scale-105 active:scale-95 cell-content ${hasEmojiClass}
+                         ${phase?.color || 'bg-white border-slate-50'} 
+                         ${isToday ? 'border-blue-500 ring-4 ring-blue-50 z-10' : 'border-transparent'}
+                         ${isPerfectOff ? 'ring-2 ring-rose-200 shadow-md' : ''}">
                         
-                        <span class="text-sm font-black ${isWeekend ? 'text-rose-500' : 'text-slate-700'}">${d}</span>
+                        <!-- Date Number: Will be hidden on small screens if has-emoji -->
+                        <span class="date-number text-sm font-black ${isWeekend ? 'text-rose-500' : 'text-slate-700'}">${d}</span>
+                        
                         <span class="text-[8px] font-bold opacity-30 tracking-tighter">D${cDay}</span>
                         
                         <!-- EMOJI Area -->
-                        <div class="absolute top-1 right-1 flex flex-col gap-0.5">
-                            ${emoji ? `<span class="text-lg drop-shadow-sm">${emoji}</span>` : ''}
+                        <div class="emoji-wrapper flex flex-col gap-0.5">
+                            ${emoji ? `<span class="drop-shadow-sm">${emoji}</span>` : ''}
                         </div>
                     </div>
                 `;
@@ -555,10 +577,10 @@
                     <div class="bg-white p-6 rounded-[2rem] border border-slate-100 flex flex-wrap items-center justify-center gap-6 shadow-sm">
                         <div class="flex flex-wrap justify-center gap-4 md:gap-8">
                             <div class="flex items-center gap-2"><span class="text-xl">👻</span> <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Ghost Nap</span></div>
-                            <div class="flex items-center gap-2"><span class="text-xl">🌟</span> <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Golden Ghost (Holiday)</span></div>
+                            <div class="flex items-center gap-2"><span class="text-xl">🌟</span> <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Golden Ghost</span></div>
                             <div class="flex items-center gap-2"><span class="text-xl">❤️</span> <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Perfect OFF</span></div>
-                            <div class="flex items-center gap-2"><span class="text-xl">💛</span> <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Golden OFF (Holiday)</span></div>
-                            <div class="flex items-center gap-2"><span class="text-xl">✨</span> <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Holiday (Work)</span></div>
+                            <div class="flex items-center gap-2"><span class="text-xl">💛</span> <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Golden OFF</span></div>
+                            <div class="flex items-center gap-2"><span class="text-xl">✨</span> <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Holiday</span></div>
                         </div>
                         ${holidayListHTML}
                     </div>
@@ -588,7 +610,7 @@
                         </div>
                     </div>
 
-                    <!-- Cycle Reference Date (Added Here) -->
+                    <!-- Cycle Reference Date (Only Place to Edit now) -->
                     <div class="bg-blue-50 p-6 rounded-3xl border border-blue-100 shadow-sm flex items-center justify-between">
                          <div>
                             <h3 class="font-black text-blue-900">Start Date Configuration</h3>
