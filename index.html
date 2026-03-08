@@ -175,7 +175,7 @@
             },
             {
                 id: 11, title: 'วัน OFF 2-3 (Day 11-12) - สวรรค์ Hybrid', type: 'off_day_heaven', days: [11, 12],
-                color: 'bg-purple-50 border-purple-200 text-purple-800', accent: 'bg-purple-500',
+                color: 'bg-green-50 border-green-200 text-green-800', accent: 'bg-green-500',
                 routine: [
                     { start: '08:30', end: '09:30', task: 'Wake up & Meal: ตื่นนอน / มื้อสาย', icon: 'coffee' },
                     { start: '09:30', end: '12:30', task: 'Main Workout: Long Run / Heavy Weight (รวมเดินทาง)', icon: 'trending-up' },
@@ -550,15 +550,15 @@
 
                 gridHTML += `
                     <div onclick="jumpToDate('${isoKey}')" 
-                         class="aspect-square relative flex flex-col items-center justify-center rounded-2xl border-2 cursor-pointer transition-all hover:scale-105 active:scale-95 cell-content ${hasEmojiClass}
+                         class="aspect-square relative flex flex-col items-center justify-center rounded-2xl cursor-pointer transition-all hover:scale-105 active:scale-95 cell-content ${hasEmojiClass} ${isToday ? 'border-4' : 'border-2'}
                          ${phase?.color || 'bg-white border-slate-50'} 
-                         ${isToday ? 'border-blue-500 ring-4 ring-blue-50 z-10' : 'border-transparent'}
+                         ${isToday ? 'border-slate-800 z-10' : 'border-transparent opacity-95 hover:opacity-100'}
                          ${isPerfectOff ? 'ring-2 ring-rose-200 shadow-md' : ''}">
                         
                         <!-- Date Number: Will be hidden on small screens if has-emoji -->
                         <span class="date-number text-sm font-black ${isWeekend ? 'text-rose-500' : 'text-slate-700'}">${d}</span>
                         
-                        <span class="text-[8px] font-bold opacity-30 tracking-tighter">D${cDay}</span>
+                        <span class="text-[8px] font-bold opacity-50 tracking-tighter">D${cDay}</span>
                         
                         <!-- EMOJI Area -->
                         <div class="emoji-wrapper flex flex-col gap-0.5">
@@ -584,7 +584,7 @@
                 <div class="space-y-6">
                     <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex items-center justify-between">
                         <button onclick="calendarBaseDate.setMonth(calendarBaseDate.getMonth()-1); render()" class="p-2 hover:bg-slate-50 rounded-xl transition-all"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button>
-                        <h2 class="text-lg font-black text-slate-800 uppercase tracking-tight">${monthLabel}</h2>
+                        <h2 onclick="calendarBaseDate = new Date(); render()" class="text-lg font-black text-slate-800 uppercase tracking-tight cursor-pointer hover:text-blue-600 transition-colors">${monthLabel}</h2>
                         <button onclick="calendarBaseDate.setMonth(calendarBaseDate.getMonth()+1); render()" class="p-2 hover:bg-slate-50 rounded-xl transition-all"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>
                     </div>
                     <div class="grid grid-cols-7 gap-2 md:gap-3">
