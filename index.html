@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>The Hybrid Engineer - Performance Dashboard</title>
     <!-- ใช้ Tailwind CSS สำหรับการจัดการ Layout และความสวยงาม -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -538,7 +538,11 @@
                 else if (isGhost) emoji = '👻';
                 else if (holidayName) emoji = '✨'; // Just Holiday
 
-                if (holidayName) currentMonthHolidays.push({ date: d, name: holidayName, icon: emoji });
+                if (holidayName) {
+                    currentMonthHolidays.push({ date: d, name: holidayName, icon: emoji });
+                } else if (isPerfectOff) {
+                    currentMonthHolidays.push({ date: d, name: 'Perfect OFF', icon: emoji });
+                }
 
                 // --- Responsive Logic ---
                 // ใช้ CSS Class ใน <style> ด้านบนเพื่อจัดการการซ่อน/แสดง
