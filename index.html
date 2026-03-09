@@ -7,6 +7,8 @@
     <!-- ใช้ Tailwind CSS สำหรับการจัดการ Layout และความสวยงาม -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/feather-icons"></script>
+    <!-- เพิ่ม Apple Touch Icon สำหรับ PWA/Add to Home Screen -->
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <!-- ใช้ฟอนต์ Noto Sans Thai ให้ดูทันสมัยและอ่านง่าย -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <!-- 
@@ -622,7 +624,8 @@
                             <h2 class="text-xl font-black text-slate-800">Advanced Schedule Editor</h2>
                             <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">Custom Cycle & Data</p>
                         </div>
-                        <div class="flex gap-2">
+                        <div class="flex gap-2 flex-wrap md:flex-nowrap justify-end">
+                            <button onclick="loadDefaultData()" class="px-4 py-2 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border border-rose-100 shadow-sm">Load Default</button>
                             <button onclick="exportData()" class="px-4 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border border-slate-100">Export JSON</button>
                             <button onclick="document.getElementById('file-input').click()" class="px-4 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border border-slate-100">Import JSON</button>
                             <input type="file" id="file-input" class="hidden" onchange="importData(event)">
@@ -703,7 +706,7 @@
                         <h3 class="text-2xl font-black uppercase tracking-tight">ตั้งค่าเสร็จสิ้นแล้ว!</h3>
                         <p class="text-sm opacity-80 leading-relaxed max-w-sm mx-auto">ข้อมูลตารางและวันหยุดของคุณถูกบันทึกไว้อย่างปลอดภัย</p>
                         <button onclick="goToDashboard()" class="w-full bg-white text-blue-600 py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-blue-50 transition-all active:scale-95 shadow-xl">Back to Dashboard</button>
-                        <button onclick="if(confirm('คืนค่าตารางเริ่มต้น? ข้อมูลที่แก้ไขจะหายไป')) resetData()" class="text-[10px] font-bold uppercase tracking-widest opacity-50 hover:opacity-100">Reset to Default</button>
+                        <button onclick="loadDefaultData()" class="text-[10px] font-bold uppercase tracking-widest opacity-50 hover:opacity-100">Reset to Default</button>
                     </div>
                 </div>
             `;
@@ -729,12 +732,50 @@
             localStorage.setItem('hybrid_start_date', startDateStr);
         }
 
-        function resetData() {
-            scheduleData = JSON.parse(JSON.stringify(DEFAULT_SCHEDULE));
-            holidaysData = JSON.parse(JSON.stringify(DEFAULT_HOLIDAYS));
-            localStorage.setItem('hybrid_holidays_cache', JSON.stringify(holidaysData));
+        /**
+         * ฟังก์ชัน: loadDefaultData
+         * หน้าที่: โหลดและเขียนทับข้อมูลตารางงานและวันหยุดด้วยข้อมูลเริ่มต้น (Default)
+         * ได้รับการเขียนโค้ดแบบยาว ทีละขั้นตอน และอธิบายด้วย Comment เพื่อให้คนที่มาอ่าน
+         * สามารถรีวิว (Review) หรือนำไปดัดแปลงแก้ไข (Edit) ได้ง่ายและเข้าใจได้ชัดเจน
+         */
+        function loadDefaultData() {
+            // ขั้นตอนที่ 1: รับการยืนยันจากผู้ใช้งาน ป้องกันกรณีที่เผลอกดปุ่มโดยไม่ตั้งใจ
+            // หากเผลอกดอาจทำให้ข้อมูลการตั้งค่าปัจจุบันที่ทำไว้สูญหายได้
+            const confirmMessage = "คุณต้องการโหลดข้อมูลเริ่มต้น (Load Default) ใช่หรือไม่?\nคำเตือน: ข้อมูลการตั้งค่าปัจจุบันของคุณจะถูกเขียนทับและไม่สามารถกู้คืนได้!";
+            const userConfirmed = confirm(confirmMessage);
+            
+            // ขั้นตอนที่ 2: ตรวจสอบการตัดสินใจของผู้ใช้ ถ้ายกเลิก (Cancel) ให้ออกจากฟังก์ชันทันที (Early Return)
+            if (userConfirmed === false) {
+                return; // จบการทำงาน ไม่ทำคำสั่งด้านล่าง
+            }
+
+            // ขั้นตอนที่ 3: เตรียมข้อมูล Schedule เริ่มต้น
+            // การใช้ JSON.stringify และตามด้วย JSON.parse เป็นเทคนิคที่เรียกว่า "Deep Copy"
+            // ประโยชน์คือป้องกันไม่ให้ข้อมูลที่ถูกนำมาใช้งานไปแก้ไขตัวอ้างอิงของตัวแปรเริ่มต้น (DEFAULT_SCHEDULE)
+            const scheduleAsString = JSON.stringify(DEFAULT_SCHEDULE);
+            const freshScheduleDataObject = JSON.parse(scheduleAsString);
+
+            // ขั้นตอนที่ 4: เตรียมข้อมูล Holidays (วันหยุด) เริ่มต้น ด้วยเทคนิค Deep Copy เช่นเดียวกัน
+            const holidaysAsString = JSON.stringify(DEFAULT_HOLIDAYS);
+            const freshHolidaysDataObject = JSON.parse(holidaysAsString);
+
+            // ขั้นตอนที่ 5: นำข้อมูลใหม่ที่เพิ่งเตรียมเสร็จไปแทนที่ในตัวแปรสถานะหลัก (State Variables) ของระบบ
+            scheduleData = freshScheduleDataObject;
+            holidaysData = freshHolidaysDataObject;
+
+            // ขั้นตอนที่ 6: บันทึกวันหยุด (Holidays) ลงใน Local Storage ของ Browser
+            const holidaysToSave = JSON.stringify(holidaysData);
+            localStorage.setItem('hybrid_holidays_cache', holidaysToSave);
+
+            // ขั้นตอนที่ 7: อัปเดตข้อมูลการจัดตารางเวลา (Schedule) ลงใน Local Storage
+            // ภายในฟังก์ชัน saveData() จะทำการเซฟ scheduleData ให้กับเราโดยอัตโนมัติ
             saveData();
+
+            // ขั้นตอนที่ 8: รีเฟรชหน้าจอ (Re-render) เพื่อดึงข้อมูลสถานะล่าสุดไปวาด UI บนหน้าเว็บใหม่
             render();
+
+            // ขั้นตอนที่ 9: แจ้งเตือนข้อความให้ผู้ใช้งานทราบว่ากระบวนการทุกอย่างเสร็จสมบูรณ์
+            alert("โหลดข้อมูลเริ่มต้น (Default Data) เข้าสู่ระบบเรียบร้อยแล้ว!");
         }
 
         function updateStartDate(val) {
