@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -10,77 +11,124 @@
     <!-- เพิ่ม Apple Touch Icon สำหรับ PWA/Add to Home Screen -->
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <!-- ใช้ฟอนต์ Noto Sans Thai ให้ดูทันสมัยและอ่านง่าย -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;700;900&display=swap"
+        rel="stylesheet">
     <!-- 
         SVG Icons used from Feather Icons (https://feathericons.com)
         Licensed under MIT License (https://github.com/FeatherCMS/feather-icons/blob/master/LICENSE)
     -->
     <style>
-        body { font-family: 'Noto Sans Thai', sans-serif; touch-action: manipulation; }
-        .fade-in { animation: fadeIn 0.4s ease-out; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        body {
+            font-family: 'Noto Sans Thai', sans-serif;
+            touch-action: manipulation;
         }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         /* ตกแต่งส่วนที่เป็น Progress ให้ดูสมูท */
-        .progress-bar { transition: height 1s cubic-bezier(0.4, 0, 0.2, 1); }
-        
+        .progress-bar {
+            transition: height 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
         /* Animation สำหรับ Active Task */
         .active-task-pulse {
             animation: borderPulse 2s infinite;
         }
+
         @keyframes borderPulse {
-            0% { border-color: #3b82f6; box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
-            70% { border-color: #60a5fa; box-shadow: 0 0 0 6px rgba(59, 130, 246, 0); }
-            100% { border-color: #3b82f6; box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+            0% {
+                border-color: #3b82f6;
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+            }
+
+            70% {
+                border-color: #60a5fa;
+                box-shadow: 0 0 0 6px rgba(59, 130, 246, 0);
+            }
+
+            100% {
+                border-color: #3b82f6;
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+            }
         }
 
         /* --- Custom Responsive Logic for Calendar (iPhone/Small Screen < 540px) --- */
         /* Default (Mobile First): ถ้ามีคลาส has-emoji */
         .cell-content.has-emoji .date-number {
-            display: none; /* ซ่อนเลขวันที่บนมือถือถ้ามี emoji */
+            display: none;
+            /* ซ่อนเลขวันที่บนมือถือถ้ามี emoji */
         }
+
         .cell-content.has-emoji .emoji-wrapper {
-            position: static; /* ให้อยู่ใน flow ปกติ (ตรงกลาง) */
-            font-size: 1.75rem; /* ขยายขนาด emoji */
+            position: static;
+            /* ให้อยู่ใน flow ปกติ (ตรงกลาง) */
+            font-size: 1.75rem;
+            /* ขยายขนาด emoji */
             line-height: 1;
         }
 
         /* Desktop/Tablet (Width >= 540px) */
         @media (min-width: 540px) {
             .cell-content.has-emoji .date-number {
-                display: block !important; /* กลับมาแสดงเลขวันที่ */
+                display: block !important;
+                /* กลับมาแสดงเลขวันที่ */
             }
+
             .cell-content.has-emoji .emoji-wrapper {
-                position: absolute; /* กลับไปลอยมุมขวาบน */
+                position: absolute;
+                /* กลับไปลอยมุมขวาบน */
                 top: 0.25rem;
                 right: 0.25rem;
-                font-size: 1.125rem; /* ขนาดปกติ */
+                font-size: 1.125rem;
+                /* ขนาดปกติ */
             }
         }
     </style>
 </head>
+
 <body class="bg-slate-50 text-slate-900 pb-20">
 
     <div class="max-w-4xl mx-auto p-4 md:p-8 space-y-6">
         <!-- ==========================================
               ส่วนหัว (Header & Navigation)
              ========================================== -->
-        <header class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+        <header
+            class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
             <div class="flex items-center gap-3 cursor-pointer" onclick="goToDashboard()">
                 <div class="p-3 bg-yellow-500 rounded-2xl text-white shadow-lg">
-                    <svg xmlns="http://www.w3.org/2001/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                    <svg xmlns="http://www.w3.org/2001/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                    </svg>
                 </div>
                 <div>
                     <h1 class="text-xl font-black tracking-tight leading-none">Hybrid Planner</h1>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Version 2.4 (Schedule & Icon Update)</p>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Version 2.4 (Schedule
+                        & Icon Update)</p>
                 </div>
             </div>
-            
+
             <div class="flex justify-around bg-slate-100 p-1.5 rounded-2xl overflow-x-auto gap-1">
-                <button onclick="changeView('dashboard')" id="nav-dashboard" class="nav-item px-5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap bg-white shadow-sm text-blue-600">Dashboard</button>
-                <button onclick="changeView('calendar')" id="nav-calendar" class="nav-item px-5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap text-slate-500">Calendar</button>
-                <button onclick="changeView('editor')" id="nav-editor" class="nav-item px-5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap text-slate-500">Setup</button>
+                <button onclick="changeView('dashboard')" id="nav-dashboard"
+                    class="nav-item px-5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap bg-white shadow-sm text-blue-600">Dashboard</button>
+                <button onclick="changeView('calendar')" id="nav-calendar"
+                    class="nav-item px-5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap text-slate-500">Calendar</button>
+                <button onclick="changeView('editor')" id="nav-editor"
+                    class="nav-item px-5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap text-slate-500">Setup</button>
             </div>
         </header>
 
@@ -88,7 +136,8 @@
         <main id="app-content" class="fade-in"></main>
 
         <footer class="text-center opacity-30 mt-10">
-            <p class="text-[9px] font-black uppercase tracking-[0.2em]">Efficiency is the only freedom for Hybrid Engineers</p>
+            <p class="text-[9px] font-black uppercase tracking-[0.2em]">Efficiency is the only freedom for Hybrid
+                Engineers</p>
         </footer>
     </div>
 
@@ -253,10 +302,10 @@
         let startDateStr = localStorage.getItem('hybrid_start_date') || '2026-03-30';
         let holidaysData = JSON.parse(localStorage.getItem('hybrid_holidays_cache')) || DEFAULT_HOLIDAYS;
         let holidayApiStatus = 'Idle'; // Idle, Loading, Success, Error
-        
+
         let currentView = 'dashboard';
-        let previewOffset = 0; 
-        let calendarBaseDate = new Date(); 
+        let previewOffset = 0;
+        let calendarBaseDate = new Date();
 
         /**
          * 3. ฟังก์ชันคำนวณรอบวัน (CORE CALCULATIONS)
@@ -264,20 +313,20 @@
 
         function getCycleLength() {
             let max = 0;
-            scheduleData.forEach(p => p.days.forEach(d => { if(d > max) max = d; }));
+            scheduleData.forEach(p => p.days.forEach(d => { if (d > max) max = d; }));
             return max || 1;
         }
 
         function getCycleDay(dateObj) {
             const start = new Date(startDateStr);
-            start.setHours(0,0,0,0);
+            start.setHours(0, 0, 0, 0);
             const target = new Date(dateObj);
-            target.setHours(0,0,0,0);
-            
+            target.setHours(0, 0, 0, 0);
+
             const diffTime = target.getTime() - start.getTime();
             const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
             const cycleLen = getCycleLength();
-            
+
             return ((diffDays % cycleLen + cycleLen) % cycleLen) + 1;
         }
 
@@ -291,14 +340,14 @@
                 'Ghost': 'wind',             // Changed from non-existent
                 'Work': 'briefcase'
             };
-            
+
             const key = (map[name] || name || 'sun').toLowerCase();
-            
+
             if (typeof feather !== 'undefined' && feather.icons[key]) {
                 // REMOVED: Heart special case for color consistency
-                return feather.icons[key].toSvg({ 
-                    width: 20, 
-                    height: 20, 
+                return feather.icons[key].toSvg({
+                    width: 20,
+                    height: 20,
                     'stroke-width': 2.5
                 });
             }
@@ -310,26 +359,32 @@
         async function fetchThaiHolidays() {
             holidayApiStatus = 'Loading';
             renderEditor(document.getElementById('app-content'));
-            
+
             try {
                 // แก้ปัญหา CORS โดยใช้ allorigins Proxy
                 const targetUrl = 'https://www.myhora.com/calendar/ical/holiday.aspx?latest.json';
-                const proxyUrl = 'https://api.allorigins.win/raw?url=';
-                
+                const proxyUrl = 'https://corsproxy.io/?';
+
                 const response = await fetch(proxyUrl + encodeURIComponent(targetUrl));
                 if (response.ok) {
-                    const data = await response.json();
-                    
+                    let rawText = await response.text();
+
+                    // แก้ไขปัญหาโครงสร้าง JSON จาก MyHora ที่ไม่มีเครื่องหมายลูกน้ำ (comma) คั่นระหว่าง Object ใน VEVENT array
+                    // เปลี่ยนจาก }{ เป็น },{
+                    rawText = rawText.replace(/\}\s*\{/g, '},{');
+
+                    const data = JSON.parse(rawText);
+
                     // Parse logic based on MyHora/iCal structure
                     if (data.VCALENDAR && data.VCALENDAR[0] && data.VCALENDAR[0].VEVENT) {
                         const events = data.VCALENDAR[0].VEVENT;
                         let newHolidays = {};
-                        
+
                         events.forEach(ev => {
                             // Extract date: "20250101"
                             const dateRaw = ev["DTSTART;VALUE=DATE"];
                             const name = ev["SUMMARY"];
-                            
+
                             if (dateRaw && name) {
                                 // Convert YYYYMMDD to YYYY-MM-DD
                                 const y = dateRaw.substring(0, 4);
@@ -354,7 +409,7 @@
                 holidayApiStatus = 'Error';
             }
             renderEditor(document.getElementById('app-content'));
-            if(currentView === 'calendar') renderCalendar(document.getElementById('app-content'));
+            if (currentView === 'calendar') renderCalendar(document.getElementById('app-content'));
         }
 
         /**
@@ -386,25 +441,25 @@
             const now = new Date();
             const targetDate = new Date();
             targetDate.setDate(now.getDate() + previewOffset);
-            
+
             const cDay = getCycleDay(targetDate);
             const phase = scheduleData.find(p => p.days.includes(cDay));
             const isToday = previewOffset === 0;
-            
+
             // Fix: บังคับแสดงปีเป็น ค.ศ. (u-ca-gregory)
             const targetLabel = targetDate.toLocaleDateString('th-TH-u-ca-gregory', { day: 'numeric', month: 'long', year: 'numeric' });
 
             let currentTask = null;
             if (phase) {
                 const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-                const sorted = [...phase.routine].sort((a,b) => a.start.localeCompare(b.start));
-                
+                const sorted = [...phase.routine].sort((a, b) => a.start.localeCompare(b.start));
+
                 // Find active task (only if isToday)
                 if (isToday) {
-                    for(let i=0; i < sorted.length; i++) {
+                    for (let i = 0; i < sorted.length; i++) {
                         const item = sorted[i];
-                        const isActive = (timeStr >= item.start && (timeStr < item.end || item.end < item.start)) || 
-                                       (item.end < item.start && timeStr < item.end);
+                        const isActive = (timeStr >= item.start && (timeStr < item.end || item.end < item.start)) ||
+                            (item.end < item.start && timeStr < item.end);
                         if (isActive) {
                             currentTask = item;
                             break;
@@ -446,7 +501,7 @@
                             <!-- Progress Visual -->
                             <div class="w-40 h-40 relative flex items-center justify-center bg-slate-50 rounded-full border-4 border-slate-100 overflow-hidden shrink-0 shadow-inner">
                                 <div class="absolute bottom-0 w-full bg-blue-500 progress-bar" 
-                                     style="height: ${(cDay/getCycleLength())*100}%; opacity: 0.15; background-color: ${phase ? '' : '#cbd5e1'}"></div>
+                                     style="height: ${(cDay / getCycleLength()) * 100}%; opacity: 0.15; background-color: ${phase ? '' : '#cbd5e1'}"></div>
                                 <div class="z-10 text-center">
                                     <span class="block text-6xl font-black text-slate-800 leading-none">${cDay}</span>
                                     <span class="text-[10px] font-black uppercase text-slate-400 mt-1 block">Cycle Day</span>
@@ -474,11 +529,11 @@
                         </div>
                         <div class="divide-y divide-slate-50">
                             ${phase?.routine.map(item => {
-                                // Logic Highlighting Task
-                                const isActiveTask = isToday && currentTask && item.start === currentTask.start;
-                                const activeClass = isActiveTask ? 'bg-blue-50 border-l-4 border-blue-500 active-task-pulse shadow-sm scale-[1.01]' : 'hover:bg-slate-50/50 border-l-4 border-transparent';
-                                
-                                return `
+                // Logic Highlighting Task
+                const isActiveTask = isToday && currentTask && item.start === currentTask.start;
+                const activeClass = isActiveTask ? 'bg-blue-50 border-l-4 border-blue-500 active-task-pulse shadow-sm scale-[1.01]' : 'hover:bg-slate-50/50 border-l-4 border-transparent';
+
+                return `
                                 <div class="flex items-center gap-5 p-5 transition-all ${activeClass}">
                                     <div class="text-[11px] font-black w-24 shrink-0 ${isActiveTask ? 'text-blue-600' : 'text-slate-400'}">${item.start} - ${item.end}</div>
                                     <div class="p-2.5 bg-slate-100 rounded-xl text-slate-400 shrink-0 ${isActiveTask ? 'bg-blue-100 text-blue-500' : ''}">${getIcon(item.icon)}</div>
@@ -486,7 +541,7 @@
                                     ${isActiveTask ? '<span class="text-[9px] font-black text-white bg-blue-500 px-2 py-0.5 rounded-md uppercase tracking-wide animate-pulse">Now</span>' : ''}
                                 </div>
                                 `;
-                            }).join('') || '<div class="p-10 text-center text-slate-400 italic">ไม่มีข้อมูลกิจกรรม</div>'}
+            }).join('') || '<div class="p-10 text-center text-slate-400 italic">ไม่มีข้อมูลกิจกรรม</div>'}
                         </div>
                     </div>
                     
@@ -508,7 +563,7 @@
             let gridHTML = '';
             // Spacer for empty days before the 1st
             for (let i = 0; i < firstDay; i++) gridHTML += '<div class="aspect-square opacity-10"></div>';
-            
+
             // List for Legend
             let currentMonthHolidays = [];
 
@@ -518,10 +573,10 @@
                 const dStr = String(d).padStart(2, '0');
                 const mStr = String(month + 1).padStart(2, '0');
                 const isoKey = `${year}-${mStr}-${dStr}`;
-                
+
                 // Create Date Object for Cycle Calculation
                 const dateObj = new Date(year, month, d);
-                
+
                 const cDay = getCycleDay(dateObj);
                 const phase = scheduleData.find(p => p.days.includes(cDay));
                 const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
@@ -571,7 +626,7 @@
             }
 
             // Legend HTML
-            const holidayListHTML = currentMonthHolidays.length > 0 
+            const holidayListHTML = currentMonthHolidays.length > 0
                 ? `<div class="w-full mt-4 pt-4 border-t border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-2">
                     ${currentMonthHolidays.map(h => `
                         <div class="flex items-center gap-2 text-xs text-slate-500">
@@ -590,7 +645,7 @@
                         <button onclick="calendarBaseDate.setMonth(calendarBaseDate.getMonth()+1); render()" class="p-2 hover:bg-slate-50 rounded-xl transition-all"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>
                     </div>
                     <div class="grid grid-cols-7 gap-2 md:gap-3">
-                        ${['อา','จ','อ','พ','พฤ','ศ','ส'].map(d => `<div class="text-center text-[10px] font-black text-slate-400 py-1 uppercase tracking-widest">${d}</div>`).join('')}
+                        ${['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'].map(d => `<div class="text-center text-[10px] font-black text-slate-400 py-1 uppercase tracking-widest">${d}</div>`).join('')}
                         ${gridHTML}
                     </div>
                     
@@ -718,10 +773,10 @@
 
         let clockInterval = null;
         function startClock() {
-            if(clockInterval) clearInterval(clockInterval);
+            if (clockInterval) clearInterval(clockInterval);
             const update = () => {
                 const clockEl = document.getElementById('realtime-clock');
-                if(clockEl) clockEl.innerText = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                if (clockEl) clockEl.innerText = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             };
             update();
             clockInterval = setInterval(update, 1000);
@@ -743,7 +798,7 @@
             // หากเผลอกดอาจทำให้ข้อมูลการตั้งค่าปัจจุบันที่ทำไว้สูญหายได้
             const confirmMessage = "คุณต้องการโหลดข้อมูลเริ่มต้น (Load Default) ใช่หรือไม่?\nคำเตือน: ข้อมูลการตั้งค่าปัจจุบันของคุณจะถูกเขียนทับและไม่สามารถกู้คืนได้!";
             const userConfirmed = confirm(confirmMessage);
-            
+
             // ขั้นตอนที่ 2: ตรวจสอบการตัดสินใจของผู้ใช้ ถ้ายกเลิก (Cancel) ให้ออกจากฟังก์ชันทันที (Early Return)
             if (userConfirmed === false) {
                 return; // จบการทำงาน ไม่ทำคำสั่งด้านล่าง
@@ -796,16 +851,16 @@
             // Note: Month in Date constructor is 0-indexed
             const target = new Date(parts[0], parts[1] - 1, parts[2]);
             const today = new Date();
-            
+
             // Set both to midnight to count pure days
-            target.setHours(0,0,0,0);
-            today.setHours(0,0,0,0);
-            
+            target.setHours(0, 0, 0, 0);
+            today.setHours(0, 0, 0, 0);
+
             // Calculate difference in milliseconds
             const diffTime = target.getTime() - today.getTime();
             // Use Round instead of Floor to avoid timezone/DST glitches
             const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-            
+
             previewOffset = diffDays;
             changeView('dashboard');
         }
@@ -813,9 +868,9 @@
         // Editor Functions
         function updatePhase(idx, field, val) { scheduleData[idx][field] = val; saveData(); }
         function updateRoutine(pIdx, rIdx, field, val) { scheduleData[pIdx].routine[rIdx][field] = val; saveData(); }
-        function addActivity(pIdx) { scheduleData[pIdx].routine.push({start:'09:00', end:'10:00', task:'กิจกรรมใหม่', icon:'Clock'}); saveData(); render(); }
+        function addActivity(pIdx) { scheduleData[pIdx].routine.push({ start: '09:00', end: '10:00', task: 'กิจกรรมใหม่', icon: 'Clock' }); saveData(); render(); }
         function removeActivity(pIdx, rIdx) { scheduleData[pIdx].routine.splice(rIdx, 1); saveData(); render(); }
-        function addPhase() { scheduleData.push({id: Date.now(), title:'Phase ใหม่', days:[], accent:'bg-blue-500', color:'bg-blue-50', routine:[]}); saveData(); render(); }
+        function addPhase() { scheduleData.push({ id: Date.now(), title: 'Phase ใหม่', days: [], accent: 'bg-blue-500', color: 'bg-blue-50', routine: [] }); saveData(); render(); }
 
         // Export/Import
         function exportData() {
@@ -827,7 +882,7 @@
 
         function importData(e) {
             const file = e.target.files[0];
-            if(!file) return;
+            if (!file) return;
             const reader = new FileReader();
             reader.onload = (ev) => {
                 try {
@@ -835,17 +890,17 @@
                     // Support legacy or new format
                     if (json.schedule) {
                         scheduleData = json.schedule;
-                        if(json.holidays) {
+                        if (json.holidays) {
                             holidaysData = json.holidays;
                             localStorage.setItem('hybrid_holidays_cache', JSON.stringify(holidaysData));
                         }
                     } else {
                         scheduleData = json; // Legacy format
                     }
-                    saveData(); 
+                    saveData();
                     changeView('dashboard');
                     alert('Import เรียบร้อย!');
-                } catch(e) { alert('ไฟล์ไม่ถูกต้อง'); }
+                } catch (e) { alert('ไฟล์ไม่ถูกต้อง'); }
             };
             reader.readAsText(file);
         }
@@ -860,4 +915,5 @@
 
     </script>
 </body>
+
 </html>
