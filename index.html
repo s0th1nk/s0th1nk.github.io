@@ -155,7 +155,7 @@
                 routine: [
                     { start: '05:45', end: '06:15', task: 'Wake Up: อาบน้ำ / แต่งตัว (ใช้ Willpower สูงสุด)', icon: 'zap' },
                     { start: '06:15', end: '06:30', task: 'Commute: เดินทางไปที่ทำงาน (15 นาที)', icon: 'truck' },
-                    { start: '06:30', end: '07:00', task: 'Pre-Work: รับเวร / Protein Shake + กล้วย', icon: 'coffee' },
+                    { start: '06:30', end: '07:00', task: 'Pre-Work: รับเวร / กาแฟแก้วแรก (Black Coffee)', icon: 'coffee' },
                     { start: '07:00', end: '15:00', task: 'Work: ทำงานกะเช้า (มื้อหลัก: ข้าวกล้อง + อกไก่/ปลา)', icon: 'briefcase' },
                     { start: '15:00', end: '15:15', task: 'Commute: เดินทางไปยิม (15 นาที)', icon: 'truck' },
                     { start: '15:15', end: '17:15', task: 'Gym: Weight Training - Hypertrophy', icon: 'activity' },
@@ -174,8 +174,9 @@
                     { start: '10:15', end: '10:30', task: 'Commute: เดินทางไปยิม', icon: 'truck' },
                     { start: '10:30', end: '12:30', task: 'Gym: Weight Training (Medium) / Zone 2', icon: 'activity' },
                     { start: '12:30', end: '13:15', task: 'Shower: อาบน้ำ (45 นาที)', icon: 'droplet' },
-                    { start: '13:15', end: '14:15', task: 'Main Meal: เน้นโปรตีน/คาร์บ', icon: 'clipboard' },
-                    { start: '14:15', end: '14:30', task: 'Commute: เดินทางไปทำงาน (15 นาที)', icon: 'truck' },
+                    { start: '13:15', end: '14:30', task: 'Main Meal: เน้นโปรตีน/คาร์บ', icon: 'clipboard' },
+                    { start: '14:30', end: '14:45', task: 'Commute: เดินทางไปทำงาน (15 นาที)', icon: 'truck' },
+                    { start: '14:45', end: '15:00', task: 'Pre-Work: รับเวร (15 นาที)', icon: 'coffee' },
                     { start: '15:00', end: '23:00', task: 'Work: ทำงานกะบ่าย (Snack 19:00: เลี่ยงหวาน)', icon: 'briefcase' },
                     { start: '23:00', end: '23:15', task: 'Commute: เดินทางกลับบ้าน', icon: 'truck' },
                     { start: '23:15', end: '00:00', task: 'Late Meal: โปรตีนเชค หรือ นมถั่วเหลือง', icon: 'clipboard' },
@@ -184,7 +185,7 @@
                 ]
             },
             {
-                id: 3, title: 'รอยต่อบ่ายไปดึก (Day 7) - งีบปูพื้น', type: 'transition', days: [7],
+                id: 3, title: 'รอยต่อบ่ายไปดึก (Day 7)', type: 'transition', days: [7],
                 color: 'bg-blue-50 border-blue-200 text-blue-800', accent: 'bg-blue-500',
                 routine: [
                     { start: '10:00', end: '11:00', task: 'Wake up: พักผ่อนตามอัธยาศัย', icon: 'sun' },
@@ -192,8 +193,10 @@
                     { start: '12:30', end: '13:30', task: 'Shower & Meal: อาบน้ำ / กินมื้อใหญ่', icon: 'droplet' },
                     { start: '13:30', end: '15:00', task: 'Free Time/Coding', icon: 'code' },
                     { start: '15:00', end: '18:00', task: 'Power Nap: (3 ชม.) - ลดความล้ากะดึก', icon: 'power' },
-                    { start: '18:00', end: '19:00', task: 'Wake up: ตื่นมาอาบน้ำ / กินมื้อใหญ่ (มื้อเย็น)', icon: 'clipboard' },
+                    { start: '18:00', end: '19:00', task: 'Wake up: ตื่น / อาบน้ำ / กินมื้อใหญ่ (มื้อเย็น) / รับแสง', icon: 'clipboard' },
                     { start: '19:00', end: '22:30', task: 'Family Time: อยู่กับแฟน', icon: 'heart' },
+                    { start: '22:30', end: '22:45', task: 'Commute: เดินทางไปทำงาน (15 นาที)', icon: 'truck' },
+                    { start: '22:45', end: '23:00', task: 'Pre-Work: รับเวร (15 นาที)', icon: 'coffee' },
                     { start: '23:00', end: '07:00', task: 'Work: ทำงานกะดึก (มื้อดึก 01:00 - Casein Protein)', icon: 'briefcase' }
                 ]
             },
@@ -201,12 +204,14 @@
                 id: 4, title: 'กะดึก (Day 8-9) - สู้ความง่วงด้วยวิ่ง', type: 'night_shift', days: [8, 9],
                 color: 'bg-indigo-50 border-indigo-200 text-indigo-800', accent: 'bg-indigo-500',
                 routine: [
-                    { start: '07:15', end: '08:00', task: 'Commute & Meal: กลับบ้าน / มื้อเช้า (คาร์บสูง)', icon: 'clipboard' },
+                    { start: '07:15', end: '08:00', task: 'Commute & Meal: กลับบ้าน / มื้อเช้า (คาร์บสูง)', icon: 'utensils' },
                     { start: '08:00', end: '10:00', task: 'Free Time/Coding: รออาหารย่อย', icon: 'code' },
                     { start: '10:00', end: '17:30', task: 'Sleep: นอนหลับยาว (ม่านกันแสง 100%)', icon: 'moon' },
                     { start: '17:30', end: '18:30', task: 'Activity: Easy Run หรือ Mobility Work', icon: 'activity' },
-                    { start: '18:30', end: '19:30', task: 'Pre-Work Meal: เน้นพลังงาน', icon: 'clipboard' },
+                    { start: '18:30', end: '19:30', task: 'Pre-Work Meal: เน้นพลังงาน', icon: 'coffee' },
                     { start: '19:30', end: '22:30', task: 'Family Time: อยู่กับแฟน/Coding', icon: 'heart' },
+                    { start: '22:30', end: '22:45', task: 'Commute: เดินทางไปทำงาน (15 นาที)', icon: 'truck' },
+                    { start: '22:45', end: '23:00', task: 'Pre-Work: รับเวร (15 นาที)', icon: 'briefcase' },
                     { start: '23:00', end: '07:00', task: 'Work: ทำงานกะดึก (Snack 01:00 - ย่อยง่าย)', icon: 'briefcase' }
                 ]
             },
@@ -216,12 +221,12 @@
                 routine: [
                     { start: '07:15', end: '08:00', task: 'Commute & Meal: กลับบ้าน / กินมื้อเช้า (เบาๆ)', icon: 'coffee' },
                     { start: '08:00', end: '12:00', task: 'Anchor Nap: (4 ชม.) - ห้ามนอนเกินเที่ยง!', icon: 'power' },
-                    { start: '12:00', end: '13:00', task: 'Wake up & Meal: มื้อสาย (สารอาหารครบ 5 หมู่)', icon: 'clipboard' },
+                    { start: '12:00', end: '13:00', task: 'Wake up & Meal: มื้อสาย (สารอาหารครบ 5 หมู่)', icon: 'coffee' },
                     { start: '13:00', end: '16:30', task: 'Free Time: เวลาพักผ่อนอิสระ/แฟน', icon: 'heart' },
                     { start: '16:30', end: '18:30', task: 'Full Rest', icon: 'battery-charging' },
                     { start: '18:30', end: '20:00', task: 'Dinner: กินตามใจชอบ (เน้นโปรตีน)', icon: 'heart' },
                     { start: '20:00', end: '22:00', task: 'Family Time: คุย/ดูซีรีส์', icon: 'tv' },
-                    { start: '22:00', end: '08:30', task: 'Sleep (Reset): เข้านอน', icon: 'moon' }
+                    { start: '22:00', end: '08:30', task: 'Sleep (Reset): สลบยาวเพื่อกลับสู่โลกปกติ', icon: 'moon' }
                 ]
             },
             {
@@ -300,6 +305,7 @@
          */
         let scheduleData = JSON.parse(localStorage.getItem('hybrid_schedule_v1')) || DEFAULT_SCHEDULE;
         let startDateStr = localStorage.getItem('hybrid_start_date') || '2026-03-30';
+        let firstShiftDateStr = localStorage.getItem('hybrid_first_shift_date') || '2026-04-02';
         let holidaysData = JSON.parse(localStorage.getItem('hybrid_holidays_cache')) || DEFAULT_HOLIDAYS;
         let holidayApiStatus = 'Idle'; // Idle, Loading, Success, Error
 
@@ -659,6 +665,24 @@
                             <div class="flex items-center gap-2"><span class="text-xl">✨</span> <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Holiday</span></div>
                         </div>
                         ${holidayListHTML}
+                        ${(function () {
+                    if (!firstShiftDateStr) return '';
+                    const fsDate = new Date(firstShiftDateStr);
+                    fsDate.setHours(0, 0, 0, 0);
+                    const todayDate = new Date();
+                    todayDate.setHours(0, 0, 0, 0);
+                    const diffDaysShift = Math.floor((todayDate.getTime() - fsDate.getTime()) / (1000 * 60 * 60 * 24));
+                    const displayDays = diffDaysShift >= 0 ? diffDaysShift : 0;
+                    return `
+                            <div class="w-full pt-4 border-t border-slate-100 flex justify-center items-center mt-2">
+                                <h3 class="text-sm font-bold text-slate-600 flex items-center gap-2">
+                                    เข้ากะมาแล้ว 
+                                    <span class="px-4 py-1.5 bg-blue-50 text-blue-600 rounded-xl text-xl font-black shadow-inner border border-blue-100">${displayDays}</span> 
+                                    วัน
+                                </h3>
+                            </div>
+                            `;
+                })()}
                     </div>
                 </div>
             `;
@@ -696,6 +720,18 @@
                          <div class="flex flex-col items-end">
                             <input type="date" value="${startDateStr}" onchange="updateStartDate(this.value)" class="bg-white px-4 py-2 rounded-xl text-sm font-bold text-slate-700 outline-none border border-blue-200 focus:border-blue-500 shadow-sm">
                             <span class="text-[9px] text-blue-400 mt-1 font-bold">Auto-saved to LocalStorage</span>
+                         </div>
+                    </div>
+
+                    <!-- First Shift Date Configuration -->
+                    <div class="bg-indigo-50 p-6 rounded-3xl border border-indigo-100 shadow-sm flex items-center justify-between">
+                         <div>
+                            <h3 class="font-black text-indigo-900">First Shift Date Configuration</h3>
+                            <p class="text-[10px] text-indigo-400 font-bold uppercase tracking-widest">วันเข้ากะวันแรก</p>
+                         </div>
+                         <div class="flex flex-col items-end">
+                            <input type="date" value="${firstShiftDateStr}" onchange="updateFirstShiftDate(this.value)" class="bg-white px-4 py-2 rounded-xl text-sm font-bold text-slate-700 outline-none border border-indigo-200 focus:border-indigo-500 shadow-sm">
+                            <span class="text-[9px] text-indigo-400 mt-1 font-bold">Auto-saved to LocalStorage</span>
                          </div>
                     </div>
 
@@ -785,6 +821,13 @@
         function saveData() {
             localStorage.setItem('hybrid_schedule_v1', JSON.stringify(scheduleData));
             localStorage.setItem('hybrid_start_date', startDateStr);
+            localStorage.setItem('hybrid_first_shift_date', firstShiftDateStr);
+        }
+
+        function updateFirstShiftDate(val) {
+            firstShiftDateStr = val;
+            saveData();
+            render();
         }
 
         /**
@@ -817,13 +860,15 @@
             // ขั้นตอนที่ 5: นำข้อมูลใหม่ที่เพิ่งเตรียมเสร็จไปแทนที่ในตัวแปรสถานะหลัก (State Variables) ของระบบ
             scheduleData = freshScheduleDataObject;
             holidaysData = freshHolidaysDataObject;
+            startDateStr = '2026-03-30';
+            firstShiftDateStr = '2026-04-02';
 
             // ขั้นตอนที่ 6: บันทึกวันหยุด (Holidays) ลงใน Local Storage ของ Browser
             const holidaysToSave = JSON.stringify(holidaysData);
             localStorage.setItem('hybrid_holidays_cache', holidaysToSave);
 
-            // ขั้นตอนที่ 7: อัปเดตข้อมูลการจัดตารางเวลา (Schedule) ลงใน Local Storage
-            // ภายในฟังก์ชัน saveData() จะทำการเซฟ scheduleData ให้กับเราโดยอัตโนมัติ
+            // ขั้นตอนที่ 7: อัปเดตข้อมูลการจัดตารางเวลา (Schedule) และวันที่ ลงใน Local Storage
+            // ภายในฟังก์ชัน saveData() จะทำการเซฟข้อมูลต่างๆ ให้กับเราโดยอัตโนมัติ
             saveData();
 
             // ขั้นตอนที่ 8: รีเฟรชหน้าจอ (Re-render) เพื่อดึงข้อมูลสถานะล่าสุดไปวาด UI บนหน้าเว็บใหม่
@@ -874,7 +919,7 @@
 
         // Export/Import
         function exportData() {
-            const exportObj = { schedule: scheduleData, holidays: holidaysData };
+            const exportObj = { schedule: scheduleData, holidays: holidaysData, firstShiftDate: firstShiftDateStr };
             const data = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj, null, 2));
             const a = document.createElement('a');
             a.href = data; a.download = "hybrid_engineer_data.json"; a.click();
@@ -893,6 +938,9 @@
                         if (json.holidays) {
                             holidaysData = json.holidays;
                             localStorage.setItem('hybrid_holidays_cache', JSON.stringify(holidaysData));
+                        }
+                        if (json.firstShiftDate) {
+                            firstShiftDateStr = json.firstShiftDate;
                         }
                     } else {
                         scheduleData = json; // Legacy format
