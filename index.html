@@ -45,26 +45,6 @@
         }
 
         /* Animation สำหรับ Active Task */
-        .active-task-pulse {
-            animation: borderPulse 2s infinite;
-        }
-
-        @keyframes borderPulse {
-            0% {
-                border-color: #3b82f6;
-                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
-            }
-
-            70% {
-                border-color: #60a5fa;
-                box-shadow: 0 0 0 6px rgba(59, 130, 246, 0);
-            }
-
-            100% {
-                border-color: #3b82f6;
-                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
-            }
-        }
 
         /* --- Custom Responsive Logic for Calendar (iPhone/Small Screen < 540px) --- */
         /* Default (Mobile First): ถ้ามีคลาส has-emoji */
@@ -613,7 +593,7 @@
                             ${phase?.routine.map(item => {
                 // Logic Highlighting Task
                 const isActiveTask = isToday && currentTask && item.start === currentTask.start;
-                const activeClass = isActiveTask ? 'bg-blue-50 border-l-4 border-blue-500 active-task-pulse shadow-sm scale-[1.01]' : 'hover:bg-slate-50/50 border-l-4 border-transparent';
+                const activeClass = isActiveTask ? 'bg-blue-50 border-l-4 border-blue-500 shadow-sm scale-[1.01]' : 'hover:bg-slate-50/50 border-l-4 border-transparent';
 
                 return `
                                 <div class="flex items-center gap-5 p-5 transition-all ${activeClass}">
@@ -885,40 +865,40 @@
 
         function getNextWorkShift() {
             const realNow = new Date();
-            
+
             for (let offset = -1; offset <= 14; offset++) {
                 let checkDate = new Date(realNow);
                 checkDate.setDate(realNow.getDate() + offset);
-                
+
                 let cDay = getCycleDay(checkDate);
                 let phase = scheduleData.find(p => p.days.includes(cDay));
-                
+
                 if (phase && phase.routine && phase.routine.length > 0) {
                     let baseDate = new Date(checkDate);
                     baseDate.setHours(0, 0, 0, 0);
                     let lastMins = -1;
-                    
+
                     for (let item of phase.routine) {
                         let [h, m] = item.start.split(':').map(Number);
                         let taskMins = h * 60 + m;
-                        
+
                         if (taskMins < lastMins) {
                             baseDate.setDate(baseDate.getDate() + 1);
                         }
                         lastMins = taskMins;
-                        
+
                         let [eh, em] = item.end.split(':').map(Number);
                         let endTaskMins = eh * 60 + em;
                         let endDate = new Date(baseDate);
-                        
+
                         if (endTaskMins < taskMins) {
                             endDate.setDate(endDate.getDate() + 1);
                         }
                         endDate.setHours(eh, em, 0, 0);
-                        
+
                         let taskStartRealTime = new Date(baseDate);
                         taskStartRealTime.setHours(h, m, 0, 0);
-                        
+
                         if (item.task.toLowerCase().includes('work:')) {
                             if (realNow >= taskStartRealTime && realNow < endDate) {
                                 return { start: taskStartRealTime, end: endDate, task: item.task, isWorkingNow: true };
@@ -958,7 +938,7 @@
                 if (titleEl) titleEl.innerText = "CURRENTLY WORKING";
                 if (labelEl) labelEl.innerText = "Time until shift ends";
                 diffMs = nextWork.end.getTime() - now.getTime();
-                
+
                 const container = document.getElementById('next-work-container');
                 if (container) {
                     container.classList.add('ring-2', 'ring-rose-200');
@@ -972,7 +952,7 @@
                 if (titleEl) titleEl.innerText = "NEXT WORK SHIFT";
                 if (labelEl) labelEl.innerText = "Time until shift begins";
                 diffMs = nextWork.start.getTime() - now.getTime();
-                
+
                 const container = document.getElementById('next-work-container');
                 if (container) {
                     container.classList.remove('ring-2', 'ring-rose-200');
