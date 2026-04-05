@@ -339,41 +339,41 @@
         function getLogicalState(dateObj) {
             let d = new Date(dateObj);
             let cDay = getCycleDay(d);
-            
+
             let prevCDay = cDay - 1;
             if (prevCDay < 1) prevCDay = getCycleLength();
-            
+
             let prevPhase = scheduleData.find(p => p.days.includes(prevCDay));
             let rollOverMins = 0;
-            
+
             if (prevPhase && prevPhase.routine && prevPhase.routine.length > 0) {
                 let crossesMidnight = false;
                 let maxSortTime = -1;
-                
+
                 for (let item of prevPhase.routine) {
                     let sArr = item.start.split(':').map(Number);
                     let eArr = item.end.split(':').map(Number);
                     let startMins = sArr[0] * 60 + sArr[1];
                     let endMins = eArr[0] * 60 + eArr[1];
-                    
+
                     if (endMins < startMins) crossesMidnight = true;
                     if (startMins < maxSortTime) crossesMidnight = true;
                     maxSortTime = Math.max(maxSortTime, startMins);
                 }
-                
+
                 if (crossesMidnight) {
                     let lastTask = prevPhase.routine[prevPhase.routine.length - 1];
                     let eArr = lastTask.end.split(':').map(Number);
                     rollOverMins = eArr[0] * 60 + eArr[1];
                 }
             }
-            
+
             let currentMins = d.getHours() * 60 + d.getMinutes();
             if (currentMins < rollOverMins) {
                 d.setDate(d.getDate() - 1);
                 cDay = prevCDay;
             }
-            
+
             return {
                 logicalDate: d,
                 cDay: cDay,
@@ -559,6 +559,35 @@
                                     <span class="block text-6xl font-black text-slate-800 leading-none">${cDay}</span>
                                     <span class="text-[10px] font-black uppercase text-slate-400 mt-1 block">Cycle Day</span>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Next Work Countdown -->
+                    <div id="next-work-container" class="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6 flex flex-col md:flex-row items-center justify-between gap-4 relative overflow-hidden group">
+                        <div class="absolute -right-10 -top-10 w-40 h-40 bg-blue-50 rounded-full blur-3xl opacity-50 group-hover:bg-blue-100 transition-all"></div>
+                        <div class="flex items-center gap-4 relative z-10 w-full md:w-auto">
+                            <div class="p-3 bg-blue-50 text-blue-500 rounded-2xl shadow-inner border border-blue-100">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-[10px] font-black uppercase tracking-widest text-slate-400" id="next-work-title">Loading...</h3>
+                                <div class="text-sm font-bold text-slate-700" id="next-work-label">คำนวณรอบกะเวลา...</div>
+                                <div class="text-[10px] font-bold text-blue-500 mt-0.5" id="next-work-date">--</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 relative z-10 w-full md:w-auto justify-center md:justify-end">
+                            <div class="bg-slate-50 border border-slate-100 rounded-2xl px-4 py-2 flex flex-col items-center min-w-[60px] shadow-sm">
+                                <span class="text-xl font-black text-slate-800" id="countdown-d">00</span>
+                                <span class="text-[8px] font-black uppercase text-slate-400">Days</span>
+                            </div>
+                            <div class="bg-slate-50 border border-slate-100 rounded-2xl px-4 py-2 flex flex-col items-center min-w-[60px] shadow-sm">
+                                <span class="text-xl font-black text-slate-800" id="countdown-h">00</span>
+                                <span class="text-[8px] font-black uppercase text-slate-400">Hours</span>
+                            </div>
+                            <div class="bg-slate-50 border border-slate-100 rounded-2xl px-4 py-2 flex flex-col items-center min-w-[60px] shadow-sm">
+                                <span class="text-xl font-black text-slate-800" id="countdown-m">00</span>
+                                <span class="text-[8px] font-black uppercase text-slate-400">Mins</span>
                             </div>
                         </div>
                     </div>
@@ -854,12 +883,132 @@
          * 5. ฟังก์ชันสนับสนุนการทำงาน (SUPPORTING ACTIONS)
          */
 
+        function getNextWorkShift() {
+            const realNow = new Date();
+            
+            for (let offset = -1; offset <= 14; offset++) {
+                let checkDate = new Date(realNow);
+                checkDate.setDate(realNow.getDate() + offset);
+                
+                let cDay = getCycleDay(checkDate);
+                let phase = scheduleData.find(p => p.days.includes(cDay));
+                
+                if (phase && phase.routine && phase.routine.length > 0) {
+                    let baseDate = new Date(checkDate);
+                    baseDate.setHours(0, 0, 0, 0);
+                    let lastMins = -1;
+                    
+                    for (let item of phase.routine) {
+                        let [h, m] = item.start.split(':').map(Number);
+                        let taskMins = h * 60 + m;
+                        
+                        if (taskMins < lastMins) {
+                            baseDate.setDate(baseDate.getDate() + 1);
+                        }
+                        lastMins = taskMins;
+                        
+                        let [eh, em] = item.end.split(':').map(Number);
+                        let endTaskMins = eh * 60 + em;
+                        let endDate = new Date(baseDate);
+                        
+                        if (endTaskMins < taskMins) {
+                            endDate.setDate(endDate.getDate() + 1);
+                        }
+                        endDate.setHours(eh, em, 0, 0);
+                        
+                        let taskStartRealTime = new Date(baseDate);
+                        taskStartRealTime.setHours(h, m, 0, 0);
+                        
+                        if (item.task.toLowerCase().includes('work:')) {
+                            if (realNow >= taskStartRealTime && realNow < endDate) {
+                                return { start: taskStartRealTime, end: endDate, task: item.task, isWorkingNow: true };
+                            }
+                            if (realNow < taskStartRealTime) {
+                                return { start: taskStartRealTime, end: endDate, task: item.task, isWorkingNow: false };
+                            }
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
+        function updateNextWorkCountdown() {
+            const nextWork = getNextWorkShift();
+            const dEl = document.getElementById('countdown-d');
+            const hEl = document.getElementById('countdown-h');
+            const mEl = document.getElementById('countdown-m');
+            const titleEl = document.getElementById('next-work-title');
+            const labelEl = document.getElementById('next-work-label');
+            const dateEl = document.getElementById('next-work-date');
+
+            if (!dEl) return; // Not on dashboard view
+
+            if (!nextWork) {
+                if (titleEl) titleEl.innerText = "NO WORK SCHEDULED";
+                if (labelEl) labelEl.innerText = "--";
+                if (dateEl) dateEl.innerText = "--";
+                return;
+            }
+
+            const now = new Date();
+            let diffMs = 0;
+
+            if (nextWork.isWorkingNow) {
+                if (titleEl) titleEl.innerText = "CURRENTLY WORKING";
+                if (labelEl) labelEl.innerText = "Time until shift ends";
+                diffMs = nextWork.end.getTime() - now.getTime();
+                
+                const container = document.getElementById('next-work-container');
+                if (container) {
+                    container.classList.add('ring-2', 'ring-rose-200');
+                    container.classList.replace('border-slate-100', 'border-rose-100');
+                    if (titleEl) {
+                        titleEl.classList.remove('text-slate-400');
+                        titleEl.classList.add('text-rose-500');
+                    }
+                }
+            } else {
+                if (titleEl) titleEl.innerText = "NEXT WORK SHIFT";
+                if (labelEl) labelEl.innerText = "Time until shift begins";
+                diffMs = nextWork.start.getTime() - now.getTime();
+                
+                const container = document.getElementById('next-work-container');
+                if (container) {
+                    container.classList.remove('ring-2', 'ring-rose-200');
+                    container.classList.replace('border-rose-100', 'border-slate-100');
+                    if (titleEl) {
+                        titleEl.classList.remove('text-rose-500');
+                        titleEl.classList.add('text-slate-400');
+                    }
+                }
+            }
+
+            if (dateEl) {
+                const targetDateObj = nextWork.isWorkingNow ? nextWork.end : nextWork.start;
+                const dateStr = targetDateObj.toLocaleDateString('th-TH-u-ca-gregory', { weekday: 'short', day: 'numeric', month: 'short' });
+                const timeStr = targetDateObj.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+                dateEl.innerText = `${dateStr} @ ${timeStr}`;
+            }
+
+            if (diffMs < 0) diffMs = 0;
+
+            const d = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            const h = Math.floor((diffMs / (1000 * 60 * 60)) % 24);
+            const m = Math.floor((diffMs / 1000 / 60) % 60);
+
+            if (dEl) dEl.innerText = String(d).padStart(2, '0');
+            if (hEl) hEl.innerText = String(h).padStart(2, '0');
+            if (mEl) mEl.innerText = String(m).padStart(2, '0');
+        }
+
         let clockInterval = null;
         function startClock() {
             if (clockInterval) clearInterval(clockInterval);
             const update = () => {
                 const clockEl = document.getElementById('realtime-clock');
                 if (clockEl) clockEl.innerText = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                updateNextWorkCountdown();
             };
             update();
             clockInterval = setInterval(update, 1000);
