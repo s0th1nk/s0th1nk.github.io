@@ -336,6 +336,51 @@
             return ((diffDays % cycleLen + cycleLen) % cycleLen) + 1;
         }
 
+        function getLogicalState(dateObj) {
+            let d = new Date(dateObj);
+            let cDay = getCycleDay(d);
+            
+            let prevCDay = cDay - 1;
+            if (prevCDay < 1) prevCDay = getCycleLength();
+            
+            let prevPhase = scheduleData.find(p => p.days.includes(prevCDay));
+            let rollOverMins = 0;
+            
+            if (prevPhase && prevPhase.routine && prevPhase.routine.length > 0) {
+                let crossesMidnight = false;
+                let maxSortTime = -1;
+                
+                for (let item of prevPhase.routine) {
+                    let sArr = item.start.split(':').map(Number);
+                    let eArr = item.end.split(':').map(Number);
+                    let startMins = sArr[0] * 60 + sArr[1];
+                    let endMins = eArr[0] * 60 + eArr[1];
+                    
+                    if (endMins < startMins) crossesMidnight = true;
+                    if (startMins < maxSortTime) crossesMidnight = true;
+                    maxSortTime = Math.max(maxSortTime, startMins);
+                }
+                
+                if (crossesMidnight) {
+                    let lastTask = prevPhase.routine[prevPhase.routine.length - 1];
+                    let eArr = lastTask.end.split(':').map(Number);
+                    rollOverMins = eArr[0] * 60 + eArr[1];
+                }
+            }
+            
+            let currentMins = d.getHours() * 60 + d.getMinutes();
+            if (currentMins < rollOverMins) {
+                d.setDate(d.getDate() - 1);
+                cDay = prevCDay;
+            }
+            
+            return {
+                logicalDate: d,
+                cDay: cDay,
+                phase: scheduleData.find(p => p.days.includes(cDay))
+            };
+        }
+
         function getIcon(name) {
             // Map custom names to Feather Icons for consistency
             const map = {
@@ -445,20 +490,22 @@
         // --- DASHBOARD ---
         function renderDashboard(container) {
             const now = new Date();
-            const targetDate = new Date();
-            targetDate.setDate(now.getDate() + previewOffset);
+            const targetDateRaw = new Date();
+            targetDateRaw.setDate(now.getDate() + previewOffset);
 
-            const cDay = getCycleDay(targetDate);
-            const phase = scheduleData.find(p => p.days.includes(cDay));
+            const state = getLogicalState(targetDateRaw);
+            const cDay = state.cDay;
+            const phase = state.phase;
+            const logicalTargetDate = state.logicalDate;
             const isToday = previewOffset === 0;
 
             // Fix: บังคับแสดงปีเป็น ค.ศ. (u-ca-gregory)
-            const targetLabel = targetDate.toLocaleDateString('th-TH-u-ca-gregory', { day: 'numeric', month: 'long', year: 'numeric' });
+            const targetLabel = logicalTargetDate.toLocaleDateString('th-TH-u-ca-gregory', { day: 'numeric', month: 'long', year: 'numeric' });
 
             let currentTask = null;
             if (phase) {
-                const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-                const sorted = [...phase.routine].sort((a, b) => a.start.localeCompare(b.start));
+                const timeStr = targetDateRaw.getHours().toString().padStart(2, '0') + ':' + targetDateRaw.getMinutes().toString().padStart(2, '0');
+                const sorted = [...phase.routine];
 
                 // Find active task (only if isToday)
                 if (isToday) {
