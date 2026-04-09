@@ -97,8 +97,8 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-black tracking-tight leading-none">Hybrid Planner</h1>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Version 2.4 (Schedule
-                        & Icon Update)</p>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Version 2.5
+                        (Schedule Update)</p>
                 </div>
             </div>
 
@@ -130,96 +130,131 @@
          */
         const DEFAULT_SCHEDULE = [
             {
-                id: 1, title: 'กะเช้า (Day 1-3) - วินัยสร้างกล้ามเนื้อ', type: 'morning_shift', days: [1, 2, 3],
-                color: 'bg-yellow-50 border-yellow-200 text-yellow-800', accent: 'bg-yellow-500',
+                id: 1,
+                title: 'กะเช้า (Day 1-3) - วินัยสร้างกล้ามเนื้อ',
+                type: 'morning_shift',
+                days: [1, 2, 3],
+                color: 'bg-yellow-50 border-yellow-200 text-yellow-800',
+                accent: 'bg-yellow-500',
                 routine: [
-                    { start: '05:45', end: '06:15', task: 'Wake Up: อาบน้ำ / แต่งตัว (ใช้ Willpower สูงสุด)', icon: 'zap' },
-                    { start: '06:15', end: '06:30', task: 'Commute: เดินทางไปที่ทำงาน (15 นาที)', icon: 'truck' },
-                    { start: '06:30', end: '07:00', task: 'Pre-Work: รับเวร / กาแฟแก้วแรก (Black Coffee)', icon: 'coffee' },
-                    { start: '07:00', end: '15:00', task: 'Work: ทำงานกะเช้า (มื้อหลัก: ข้าวกล้อง + อกไก่/ปลา)', icon: 'briefcase' },
-                    { start: '15:00', end: '15:15', task: 'Commute: เดินทางไปยิม (15 นาที)', icon: 'truck' },
-                    { start: '15:15', end: '17:15', task: 'Gym: Weight Training - Hypertrophy', icon: 'activity' },
-                    { start: '17:15', end: '17:45', task: 'Commute: เดินทางกลับบ้าน (30 นาที)', icon: 'truck' },
-                    { start: '17:45', end: '18:45', task: 'Dinner: โปรตีน + ผักใบเขียว (ช่วยหลับลึก)', icon: 'clipboard' },
-                    { start: '18:45', end: '19:45', task: 'Shower: อาบน้ำ (1 ชม.)', icon: 'droplet' },
-                    { start: '19:45', end: '22:15', task: 'Free Time/Coding: ท้องกำลังย่อย ห้ามนอนราบ!', icon: 'code' },
-                    { start: '22:15', end: '05:45', task: 'Sleep: เข้านอน (7.5 ชม.)', icon: 'moon' }
+                    { start: '05:30', end: '06:00', task: 'Wake Up: อาบน้ำ / แต่งตัว', icon: 'zap' },
+                    { start: '06:00', end: '06:30', task: 'Commute: เดินทางไปที่ทำงาน (30 นาที)', icon: 'truck' },
+                    { start: '06:30', end: '07:00', task: 'Pre-Work: รับเวร / กาแฟเช้า (30 นาที)', icon: 'coffee' },
+                    { start: '07:00', end: '15:00', task: 'Work: ทำงานกะเช้า', icon: 'briefcase' },
+                    { start: '15:00', end: '15:30', task: 'Commute & Prep: เดินทางกลับ / เตรียมตัวไปยิม', icon: 'home' },
+                    { start: '15:30', end: '15:45', task: 'Commute: เดินทางไปยิม (15 นาที)', icon: 'truck' },
+                    { start: '15:45', end: '17:45', task: 'Gym: Weight Training (2 ชม.)', icon: 'activity' },
+                    { start: '17:45', end: '18:00', task: 'Commute: เดินทางกลับบ้าน (15 นาที)', icon: 'truck' },
+                    { start: '18:00', end: '19:00', task: 'Dinner: มื้อเย็น', icon: 'clipboard' },
+                    { start: '19:00', end: '22:00', task: 'Free Time/Coding: เวลาพักผ่อนอิสระ', icon: 'code' },
+                    { start: '22:00', end: '23:00', task: 'Shower: อาบน้ำและเตรียมตัวนอน', icon: 'droplet' },
+                    { start: '23:00', end: '05:30', task: 'Sleep: เข้านอน (6.5 ชม.)', icon: 'moon' }
                 ]
             },
             {
-                id: 2, title: 'กะบ่าย (Day 4-6) - ตื่นสายแบบมีคุณภาพ', type: 'afternoon_shift', days: [4, 5, 6],
-                color: 'bg-orange-50 border-orange-200 text-orange-800', accent: 'bg-orange-500',
+                id: 2,
+                title: 'กะบ่าย (Day 4-6) - ตื่นสายแบบมีคุณภาพ',
+                type: 'afternoon_shift',
+                days: [4, 5, 6],
+                color: 'bg-orange-50 border-orange-200 text-orange-800',
+                accent: 'bg-orange-500',
                 routine: [
-                    { start: '09:30', end: '10:15', task: 'Wake up: Lazy Morning / จิบกาแฟ / พักผ่อน', icon: 'coffee' },
-                    { start: '10:15', end: '10:30', task: 'Commute: เดินทางไปยิม', icon: 'truck' },
-                    { start: '10:30', end: '12:30', task: 'Gym: Weight Training (Medium) / Zone 2', icon: 'activity' },
-                    { start: '12:30', end: '13:15', task: 'Shower: อาบน้ำ (45 นาที)', icon: 'droplet' },
-                    { start: '13:15', end: '14:30', task: 'Main Meal: เน้นโปรตีน/คาร์บ', icon: 'clipboard' },
-                    { start: '14:30', end: '14:45', task: 'Commute: เดินทางไปทำงาน (15 นาที)', icon: 'truck' },
-                    { start: '14:45', end: '15:00', task: 'Pre-Work: รับเวร (15 นาที)', icon: 'coffee' },
-                    { start: '15:00', end: '23:00', task: 'Work: ทำงานกะบ่าย (Snack 19:00: เลี่ยงหวาน)', icon: 'briefcase' },
-                    { start: '23:00', end: '23:15', task: 'Commute: เดินทางกลับบ้าน', icon: 'truck' },
-                    { start: '23:15', end: '00:00', task: 'Late Meal: โปรตีนเชค หรือ นมถั่วเหลือง', icon: 'clipboard' },
-                    { start: '00:00', end: '02:00', task: 'Deep Work: เวลาพัก/Coding', icon: 'code' },
-                    { start: '02:00', end: '09:30', task: 'Sleep: เข้านอน (7.5 ชม.)', icon: 'moon' }
+                    { start: '08:00', end: '10:00', task: 'Wake up: พักผ่อน / จิบกาแฟเช้า', icon: 'coffee' },
+                    { start: '10:00', end: '10:15', task: 'Commute: เดินทางไปยิม (15 นาที)', icon: 'truck' },
+                    { start: '10:15', end: '12:15', task: 'Gym: Weight Training (2 ชม.)', icon: 'activity' },
+                    { start: '12:15', end: '12:30', task: 'Commute: เดินทางกลับบ้าน (15 นาที)', icon: 'truck' },
+                    { start: '12:30', end: '13:30', task: 'Lunch: มื้อกลางวัน', icon: 'clipboard' },
+                    { start: '13:30', end: '14:00', task: 'Shower: อาบน้ำ', icon: 'droplet' },
+                    { start: '14:00', end: '14:30', task: 'Commute: เดินทางไปทำงาน (30 นาที)', icon: 'truck' },
+                    { start: '14:30', end: '15:00', task: 'Pre-Work: รับเวร (30 นาที)', icon: 'coffee' },
+                    { start: '15:00', end: '23:00', task: 'Work: ทำงานกะบ่าย (มี Dinner ในกะ)', icon: 'briefcase' },
+                    { start: '23:00', end: '23:30', task: 'Commute: เดินทางกลับบ้าน (30 นาที)', icon: 'truck' },
+                    { start: '23:30', end: '00:00', task: 'Shower: อาบน้ำ', icon: 'droplet' },
+                    { start: '00:00', end: '08:00', task: 'Sleep: เข้านอน (8 ชม.)', icon: 'moon' }
                 ]
             },
             {
-                id: 3, title: 'รอยต่อบ่ายไปดึก (Day 7)', type: 'transition', days: [7],
-                color: 'bg-blue-50 border-blue-200 text-blue-800', accent: 'bg-blue-500',
+                id: 3,
+                title: 'รอยต่อบ่ายไปดึก (Day 7)',
+                type: 'transition',
+                days: [7],
+                color: 'bg-blue-50 border-blue-200 text-blue-800',
+                accent: 'bg-blue-500',
                 routine: [
-                    { start: '10:00', end: '11:00', task: 'Wake up: พักผ่อนตามอัธยาศัย', icon: 'sun' },
-                    { start: '11:00', end: '12:30', task: 'Activity: Easy Run (30 min)', icon: 'activity' },
-                    { start: '12:30', end: '13:30', task: 'Shower & Meal: อาบน้ำ / กินมื้อใหญ่', icon: 'droplet' },
-                    { start: '13:30', end: '15:00', task: 'Free Time/Coding', icon: 'code' },
-                    { start: '15:00', end: '18:00', task: 'Power Nap: (3 ชม.) - ลดความล้ากะดึก', icon: 'power' },
-                    { start: '18:00', end: '19:00', task: 'Wake up: ตื่น / อาบน้ำ / กินมื้อใหญ่ (มื้อเย็น) / รับแสง', icon: 'clipboard' },
-                    { start: '19:00', end: '22:30', task: 'Family Time: อยู่กับแฟน', icon: 'heart' },
-                    { start: '22:30', end: '22:45', task: 'Commute: เดินทางไปทำงาน (15 นาที)', icon: 'truck' },
-                    { start: '22:45', end: '23:00', task: 'Pre-Work: รับเวร (15 นาที)', icon: 'coffee' },
-                    { start: '23:00', end: '07:00', task: 'Work: ทำงานกะดึก (มื้อดึก 01:00 - Casein Protein)', icon: 'briefcase' }
+                    { start: '08:00', end: '09:00', task: 'Wake up: ตื่นนอน / มื้อเช้า', icon: 'sun' },
+                    { start: '09:00', end: '12:00', task: 'Activity: Easy Run / Free Time', icon: 'activity' },
+                    { start: '12:00', end: '13:00', task: 'Lunch: มื้อกลางวัน', icon: 'clipboard' },
+                    { start: '13:00', end: '16:30', task: 'Free Time/Coding: พักผ่อนตามอัธยาศัย', icon: 'code' },
+                    { start: '16:30', end: '17:00', task: 'Dinner: มื้อเย็น', icon: 'clipboard' },
+                    { start: '17:00', end: '18:00', task: 'Shower: ลดอุณหภูมิร่างกายก่อน Nap', icon: 'droplet' },
+                    { start: '18:00', end: '20:00', task: 'Nap: นอนพักสายตาก่อนเข้ากะ (2 ชม.)', icon: 'power' },
+                    { start: '20:00', end: '22:00', task: 'Wake up: ตื่นนอน / Free Time', icon: 'coffee' },
+                    { start: '22:00', end: '22:30', task: 'Commute: เดินทางไปทำงาน (30 นาที)', icon: 'truck' },
+                    { start: '22:30', end: '23:00', task: 'Pre-Work: รับเวร (30 นาที)', icon: 'coffee' },
+                    { start: '23:00', end: '07:00', task: 'Work: ทำงานกะดึก (Naps: 01:10-02:30, 02:40-02:55, 03:40-05:00, 05:15-05:35)', icon: 'briefcase' }
                 ]
             },
             {
-                id: 4, title: 'กะดึก (Day 8-9) - สู้ความง่วงด้วยวิ่ง', type: 'night_shift', days: [8, 9],
-                color: 'bg-indigo-50 border-indigo-200 text-indigo-800', accent: 'bg-indigo-500',
+                id: 4,
+                title: 'กะดึก (Day 8-9) - Health Optimize',
+                type: 'night_shift',
+                days: [8, 9],
+                color: 'bg-indigo-50 border-indigo-200 text-indigo-800',
+                accent: 'bg-indigo-500',
                 routine: [
-                    { start: '07:15', end: '08:00', task: 'Commute & Meal: กลับบ้าน / มื้อเช้า (คาร์บสูง)', icon: 'utensils' },
-                    { start: '08:00', end: '10:00', task: 'Free Time/Coding: รออาหารย่อย', icon: 'code' },
-                    { start: '10:00', end: '17:30', task: 'Sleep: นอนหลับยาว (ม่านกันแสง 100%)', icon: 'moon' },
-                    { start: '17:30', end: '18:30', task: 'Activity: Easy Run หรือ Mobility Work', icon: 'activity' },
-                    { start: '18:30', end: '19:30', task: 'Pre-Work Meal: เน้นพลังงาน', icon: 'coffee' },
-                    { start: '19:30', end: '22:30', task: 'Family Time: อยู่กับแฟน/Coding', icon: 'heart' },
-                    { start: '22:30', end: '22:45', task: 'Commute: เดินทางไปทำงาน (15 นาที)', icon: 'truck' },
-                    { start: '22:45', end: '23:00', task: 'Pre-Work: รับเวร (15 นาที)', icon: 'briefcase' },
-                    { start: '23:00', end: '07:00', task: 'Work: ทำงานกะดึก (Snack 01:00 - ย่อยง่าย)', icon: 'briefcase' }
+                    { start: '07:00', end: '07:30', task: 'Commute: เดินทางกลับบ้าน (30 นาที)', icon: 'truck' },
+                    { start: '07:30', end: '08:00', task: 'Shower & Breakfast: อาบน้ำ / มื้อเช้า', icon: 'droplet' },
+                    { start: '08:00', end: '13:00', task: 'Sleep: นอนหลับพักผ่อนช่วงเช้า (5 ชม.)', icon: 'moon' },
+                    { start: '13:00', end: '14:00', task: 'Lunch: มื้อกลางวัน', icon: 'clipboard' },
+                    { start: '14:00', end: '16:30', task: 'Recovery Mode: พักผ่อนฟื้นฟูร่างกาย', icon: 'battery-charging' },
+                    { start: '16:30', end: '17:00', task: 'Dinner: มื้อเย็น', icon: 'clipboard' },
+                    { start: '17:00', end: '18:00', task: 'Free Time: เวลาพักผ่อน', icon: 'tv' },
+                    { start: '18:00', end: '20:00', task: 'Nap: นอนพักสายตาก่อนเข้ากะ (2 ชม.)', icon: 'power' },
+                    { start: '20:00', end: '21:00', task: 'Wake up: ตื่นนอน / Free Time', icon: 'coffee' },
+                    { start: '21:00', end: '22:00', task: 'Shower: อาบน้ำเตรียมตัวไปทำงาน', icon: 'droplet' },
+                    { start: '22:00', end: '22:30', task: 'Commute: เดินทางไปทำงาน (30 นาที)', icon: 'truck' },
+                    { start: '22:30', end: '23:00', task: 'Pre-Work: รับเวร (30 นาที)', icon: 'briefcase' },
+                    { start: '23:00', end: '07:00', task: 'Work: ทำงานกะดึก (Naps: 01:10-02:30, 02:40-02:55, 03:40-05:00, 05:15-05:35)', icon: 'briefcase' }
                 ]
             },
             {
-                id: 10, title: 'วัน OFF 1 (Day 10) - กู้ซากและ Reset', type: 'off_day_1', days: [10],
-                color: 'bg-emerald-50 border-emerald-200 text-emerald-800', accent: 'bg-emerald-500',
+                id: 10,
+                title: 'วัน OFF 1 (Day 10) - กู้ซากและ Reset',
+                type: 'off_day_1',
+                days: [10],
+                color: 'bg-emerald-50 border-emerald-200 text-emerald-800',
+                accent: 'bg-emerald-500',
                 routine: [
-                    { start: '07:15', end: '08:00', task: 'Commute & Meal: กลับบ้าน / กินมื้อเช้า (เบาๆ)', icon: 'coffee' },
-                    { start: '08:00', end: '12:00', task: 'Anchor Nap: (4 ชม.) - ห้ามนอนเกินเที่ยง!', icon: 'power' },
-                    { start: '12:00', end: '13:00', task: 'Wake up & Meal: มื้อสาย (สารอาหารครบ 5 หมู่)', icon: 'coffee' },
-                    { start: '13:00', end: '16:30', task: 'Free Time: เวลาพักผ่อนอิสระ/แฟน', icon: 'heart' },
-                    { start: '16:30', end: '18:30', task: 'Full Rest', icon: 'battery-charging' },
-                    { start: '18:30', end: '20:00', task: 'Dinner: กินตามใจชอบ (เน้นโปรตีน)', icon: 'heart' },
-                    { start: '20:00', end: '22:00', task: 'Family Time: คุย/ดูซีรีส์', icon: 'tv' },
-                    { start: '22:00', end: '08:30', task: 'Sleep (Reset): สลบยาวเพื่อกลับสู่โลกปกติ', icon: 'moon' }
+                    { start: '07:00', end: '07:30', task: 'Commute: เดินทางกลับบ้าน (30 นาที)', icon: 'truck' },
+                    { start: '07:30', end: '08:00', task: 'Shower & Breakfast: อาบน้ำ / มื้อเช้า', icon: 'droplet' },
+                    { start: '08:00', end: '13:00', task: 'Sleep (Reset): นอนหลับฟื้นฟู (5 ชม.)', icon: 'moon' },
+                    { start: '13:00', end: '14:00', task: 'Lunch: มื้อกลางวัน', icon: 'clipboard' },
+                    { start: '14:00', end: '18:00', task: 'Recovery Mode: พักผ่อนอิสระ', icon: 'battery-charging' },
+                    { start: '18:00', end: '19:00', task: 'Dinner: มื้อเย็น', icon: 'clipboard' },
+                    { start: '19:00', end: '22:00', task: 'Free Time: ดูซีรีส์ / พักผ่อน', icon: 'tv' },
+                    { start: '22:00', end: '23:00', task: 'Shower: อาบน้ำเตรียมเข้านอน', icon: 'droplet' },
+                    { start: '23:00', end: '06:15', task: 'Sleep: สลบยาวเพื่อกลับสู่โลกปกติ', icon: 'moon' }
                 ]
             },
             {
-                id: 11, title: 'วัน OFF 2-3 (Day 11-12) - สวรรค์ Hybrid', type: 'off_day_heaven', days: [11, 12],
-                color: 'bg-green-50 border-green-200 text-green-800', accent: 'bg-green-500',
+                id: 11,
+                title: 'วัน OFF 2-3 (Day 11-12) - สวรรค์ Hybrid',
+                type: 'off_day_heaven',
+                days: [11, 12],
+                color: 'bg-green-50 border-green-200 text-green-800',
+                accent: 'bg-green-500',
                 routine: [
-                    { start: '08:30', end: '09:30', task: 'Wake up & Meal: ตื่นนอน / มื้อสาย', icon: 'coffee' },
-                    { start: '09:30', end: '12:30', task: 'Main Workout: Long Run / Heavy Weight (รวมเดินทาง)', icon: 'trending-up' },
-                    { start: '12:30', end: '13:30', task: 'Post-Workout Meal: จัดเต็มโปรตีนซ่อมแซม', icon: 'clipboard' },
-                    { start: '13:30', end: '18:00', task: 'Free Time/Coding: ดูแลระบบ Docker', icon: 'code' },
-                    { start: '18:00', end: '19:30', task: 'Dinner: กินตามใจชอบ (เน้นโปรตีน)', icon: 'heart' },
-                    { start: '19:30', end: '22:15', task: 'Free Time: พักผ่อนยาวๆ', icon: 'sun' },
-                    { start: '22:15', end: '05:45', task: 'Sleep: เข้านอน (เตรียมตื่นเช้า)', icon: 'moon' }
+                    { start: '06:15', end: '08:00', task: 'Wake up & Free Time: ตื่นนอน / จิบกาแฟ', icon: 'coffee' },
+                    { start: '08:00', end: '10:00', task: 'Free Time/Coding: เวลาส่วนตัว', icon: 'code' },
+                    { start: '10:00', end: '10:15', task: 'Commute: เดินทางไปยิม (15 นาที)', icon: 'truck' },
+                    { start: '10:15', end: '12:15', task: 'Gym: Weight Training (2 ชม.)', icon: 'activity' },
+                    { start: '12:15', end: '12:30', task: 'Commute: เดินทางกลับบ้าน (15 นาที)', icon: 'truck' },
+                    { start: '12:30', end: '13:30', task: 'Shower & Lunch: อาบน้ำ / มื้อกลางวันจัดเต็มโปรตีน', icon: 'clipboard' },
+                    { start: '13:30', end: '18:00', task: 'Free Time: พักผ่อน / ดูแลระบบ Docker / งานอดิเรก', icon: 'sun' },
+                    { start: '18:00', end: '19:00', task: 'Dinner: มื้อเย็น', icon: 'heart' },
+                    { start: '19:00', end: '22:00', task: 'Free Time: พักผ่อนยาวๆ', icon: 'tv' },
+                    { start: '22:00', end: '23:00', task: 'Shower: อาบน้ำเตรียมเข้านอน', icon: 'droplet' },
+                    { start: '23:00', end: '06:15', task: 'Sleep: เข้านอน', icon: 'moon' }
                 ]
             }
         ];
@@ -671,7 +706,7 @@
                     <div onclick="jumpToDate('${isoKey}')" 
                          class="aspect-square relative flex flex-col items-center justify-center rounded-2xl cursor-pointer transition-all hover:scale-105 active:scale-95 cell-content ${hasEmojiClass} ${isToday ? 'border-4' : 'border-2'}
                          ${phase?.color || 'bg-white border-slate-50'} 
-                         ${isToday ? 'border-slate-800 z-10' : 'border-transparent opacity-95 hover:opacity-100'}
+                         ${isToday ? 'border-slate-800 z-10' : 'opacity-95 hover:opacity-100'}
                          ${isPerfectOff ? 'ring-2 ring-rose-200 shadow-md' : ''}">
                         
                         <!-- Date Number: Will be hidden on small screens if has-emoji -->
