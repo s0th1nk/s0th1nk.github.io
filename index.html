@@ -97,8 +97,8 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-black tracking-tight leading-none">Hybrid Planner</h1>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Version 2.5
-                        (Schedule Update)</p>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Version 2.6
+                        (Shift Premium)</p>
                 </div>
             </div>
 
@@ -322,6 +322,13 @@
         let startDateStr = localStorage.getItem('hybrid_start_date') || '2026-03-30';
         let firstShiftDateStr = localStorage.getItem('hybrid_first_shift_date') || '2026-04-02';
         let holidaysData = JSON.parse(localStorage.getItem('hybrid_holidays_cache')) || DEFAULT_HOLIDAYS;
+
+        let dayPremium = parseFloat(localStorage.getItem('hybrid_day_premium'));
+        if (isNaN(dayPremium)) dayPremium = 441.34;
+        let afternoonPremium = parseFloat(localStorage.getItem('hybrid_afternoon_premium'));
+        if (isNaN(afternoonPremium)) afternoonPremium = 772.34;
+        let nightPremium = parseFloat(localStorage.getItem('hybrid_night_premium'));
+        if (isNaN(nightPremium)) nightPremium = 993.01;
         let holidayApiStatus = 'Idle'; // Idle, Loading, Success, Error
 
         let currentView = 'dashboard';
@@ -664,6 +671,11 @@
             // List for Legend
             let currentMonthHolidays = [];
 
+            let dayShiftsCount = 0;
+            let afternoonShiftsCount = 0;
+            let nightShiftsCount = 0;
+            let offShiftsCount = 0;
+
             for (let d = 1; d <= totalDays; d++) {
                 // Correct Date Construction to avoid timezone shift
                 // Use a string format YYYY-MM-DD
@@ -696,6 +708,13 @@
                     currentMonthHolidays.push({ date: d, name: holidayName, icon: emoji });
                 } else if (isPerfectOff) {
                     currentMonthHolidays.push({ date: d, name: 'Perfect OFF', icon: emoji });
+                }
+
+                if (phase) {
+                    if (phase.type === 'morning_shift') dayShiftsCount++;
+                    else if (phase.type === 'afternoon_shift') afternoonShiftsCount++;
+                    else if (phase.type === 'night_shift' || phase.type === 'transition') nightShiftsCount++;
+                    else if (phase.type.includes('off')) offShiftsCount++;
                 }
 
                 // --- Responsive Logic ---
@@ -774,6 +793,41 @@
                             </div>
                             `;
                 })()}
+
+                        ${(function () {
+                    const expectedPremiumVal = (dayShiftsCount * dayPremium) + (afternoonShiftsCount * afternoonPremium) + (nightShiftsCount * nightPremium);
+                    const formattedPremium = expectedPremiumVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+                    const dayColor = scheduleData.find(p => p.type === 'morning_shift')?.color || 'bg-yellow-50 border-yellow-200 text-yellow-800';
+                    const afternoonColor = scheduleData.find(p => p.type === 'afternoon_shift')?.color || 'bg-orange-50 border-orange-200 text-orange-800';
+                    const nightColor = scheduleData.find(p => p.type === 'night_shift')?.color || 'bg-indigo-50 border-indigo-200 text-indigo-800';
+                    const offColor = scheduleData.find(p => p.type?.includes('off'))?.color || 'bg-rose-50 border-rose-200 text-rose-800';
+
+                    return `
+                            <div class="w-full pt-4 border-t border-slate-100 mt-2">
+                                <div class="flex justify-center items-center gap-2 md:gap-4 text-[10px] md:text-xs font-bold flex-wrap">
+                                    <div class="${dayColor} px-2 py-1 rounded-lg border">
+                                        Day: ${dayShiftsCount} shifts
+                                    </div>
+                                    <div class="${afternoonColor} px-2 py-1 rounded-lg border">
+                                        Afternoon: ${afternoonShiftsCount} shifts
+                                    </div>
+                                    <div class="${nightColor} px-2 py-1 rounded-lg border">
+                                        Night: ${nightShiftsCount} shifts
+                                    </div>
+                                    <div class="${offColor} px-2 py-1 rounded-lg border">
+                                        OFF: ${offShiftsCount} days
+                                    </div>
+                                </div>
+                                <div class="text-center mt-3">
+                                    <h3 class="text-[10px] font-black uppercase text-slate-400 mb-1">Shift Premium</h3>
+                                    <div class="inline-block px-5 py-2 bg-emerald-50 text-emerald-600 rounded-xl text-lg font-black shadow-inner border border-emerald-100">
+                                        ${formattedPremium} ฿
+                                    </div>
+                                </div>
+                            </div>
+                            `;
+                })()}
                     </div>
                 </div>
             `;
@@ -823,6 +877,28 @@
                          <div class="flex flex-col items-end">
                             <input type="date" value="${firstShiftDateStr}" onchange="updateFirstShiftDate(this.value)" class="bg-white px-4 py-2 rounded-xl text-sm font-bold text-slate-700 outline-none border border-indigo-200 focus:border-indigo-500 shadow-sm">
                             <span class="text-[9px] text-indigo-400 mt-1 font-bold">Auto-saved to LocalStorage</span>
+                         </div>
+                    </div>
+
+                    <!-- Shift Premium Configuration -->
+                    <div class="bg-emerald-50 p-6 rounded-3xl border border-emerald-100 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+                         <div>
+                            <h3 class="font-black text-emerald-900">Shift Premium (Baht/Shift)</h3>
+                            <p class="text-[10px] text-emerald-500 font-bold uppercase tracking-widest">ค่ากะเริ่มต้น</p>
+                         </div>
+                         <div class="flex gap-2 flex-wrap justify-end">
+                            <div class="flex flex-col">
+                                <label class="text-[9px] text-emerald-600 font-bold mb-1">Day Shift</label>
+                                <input type="number" step="0.01" value="${dayPremium}" onchange="updatePremium('day', this.value)" class="w-full md:w-20 bg-white px-3 py-2 rounded-xl text-sm font-bold text-slate-700 outline-none border border-emerald-200 focus:border-emerald-500 shadow-sm">
+                            </div>
+                            <div class="flex flex-col">
+                                <label class="text-[9px] text-emerald-600 font-bold mb-1">Afternoon</label>
+                                <input type="number" step="0.01" value="${afternoonPremium}" onchange="updatePremium('afternoon', this.value)" class="w-full md:w-20 bg-white px-3 py-2 rounded-xl text-sm font-bold text-slate-700 outline-none border border-emerald-200 focus:border-emerald-500 shadow-sm">
+                            </div>
+                            <div class="flex flex-col">
+                                <label class="text-[9px] text-emerald-600 font-bold mb-1">Night Shift</label>
+                                <input type="number" step="0.01" value="${nightPremium}" onchange="updatePremium('night', this.value)" class="w-full md:w-20 bg-white px-3 py-2 rounded-xl text-sm font-bold text-slate-700 outline-none border border-emerald-200 focus:border-emerald-500 shadow-sm">
+                            </div>
                          </div>
                     </div>
 
@@ -1018,13 +1094,41 @@
         }
 
         let clockInterval = null;
+        let autoRefreshLastMin = new Date().getMinutes();
+        let autoRefreshLastDate = new Date().getDate();
+
         function startClock() {
             if (clockInterval) clearInterval(clockInterval);
+
             const update = () => {
+                const now = new Date();
                 const clockEl = document.getElementById('realtime-clock');
-                if (clockEl) clockEl.innerText = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                if (clockEl) clockEl.innerText = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
                 updateNextWorkCountdown();
+
+                const currentMin = now.getMinutes();
+                const currentDate = now.getDate();
+                let shouldRender = false;
+
+                if (currentDate !== autoRefreshLastDate) {
+                    autoRefreshLastDate = currentDate;
+                    previewOffset = 0;
+                    calendarBaseDate = new Date();
+                    shouldRender = true;
+                }
+
+                if (currentMin !== autoRefreshLastMin) {
+                    autoRefreshLastMin = currentMin;
+                    if (currentView === 'dashboard' && previewOffset === 0) {
+                        shouldRender = true;
+                    }
+                }
+
+                if (shouldRender) {
+                    render();
+                }
             };
+
             update();
             clockInterval = setInterval(update, 1000);
         }
@@ -1033,6 +1137,17 @@
             localStorage.setItem('hybrid_schedule_v1', JSON.stringify(scheduleData));
             localStorage.setItem('hybrid_start_date', startDateStr);
             localStorage.setItem('hybrid_first_shift_date', firstShiftDateStr);
+            localStorage.setItem('hybrid_day_premium', dayPremium);
+            localStorage.setItem('hybrid_afternoon_premium', afternoonPremium);
+            localStorage.setItem('hybrid_night_premium', nightPremium);
+        }
+
+        function updatePremium(type, value) {
+            if (type === 'day') dayPremium = parseFloat(value) || 0;
+            if (type === 'afternoon') afternoonPremium = parseFloat(value) || 0;
+            if (type === 'night') nightPremium = parseFloat(value) || 0;
+            saveData();
+            render();
         }
 
         function updateFirstShiftDate(val) {
@@ -1073,6 +1188,9 @@
             holidaysData = freshHolidaysDataObject;
             startDateStr = '2026-03-30';
             firstShiftDateStr = '2026-04-02';
+            dayPremium = 441.34;
+            afternoonPremium = 772.34;
+            nightPremium = 993.01;
 
             // ขั้นตอนที่ 6: บันทึกวันหยุด (Holidays) ลงใน Local Storage ของ Browser
             const holidaysToSave = JSON.stringify(holidaysData);
